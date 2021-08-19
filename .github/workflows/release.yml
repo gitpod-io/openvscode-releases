@@ -17,6 +17,9 @@ jobs:
         working-directory: ./vscode
         run: | 
           yarn gulp server-min
+      - name: Bundle tarfile
+        run: |
+          tar cfzv b.tar.gz server-pkg/
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ""
