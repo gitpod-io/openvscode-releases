@@ -20,11 +20,11 @@ jobs:
       - name: Bundle tarfile
         run: |
           tar cfzv bundle.tar.gz server-pkg/
-      - name: Tar sanitiy check
+      - name: Tar sanity check
         uses: actions/upload-artifact@v2
         with:
           name: build-artifact
-          path: /bundle.tar.gz-
+          path: ./bundle.tar.gz
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ""
