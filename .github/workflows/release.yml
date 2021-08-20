@@ -19,7 +19,12 @@ jobs:
           yarn gulp server-min
       - name: Bundle tarfile
         run: |
-          tar cfzv b.tar.gz server-pkg/
+          tar cfzv bundle.tar.gz server-pkg/
+      - name: Tar sanitiy check
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifact
+          path: /bundle.tar.gz-
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ""
