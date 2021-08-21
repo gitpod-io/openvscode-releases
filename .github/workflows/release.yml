@@ -2,8 +2,12 @@ name: Release the VS Code server bundles
 on: [workflow_dispatch]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-18.04
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.os }}
     steps:
       - name: Check out the vscode repository
         run: git clone https://github.com/gitpod-io/vscode --depth=1 --branch web-server
