@@ -41,7 +41,7 @@ jobs:
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
-          name: build-artifact
+          name: build-${{ runner.os }}
           path: ${{ steps.archive.outputs.value }}
       # - uses: ncipollo/release-action@v1
       #   with:
