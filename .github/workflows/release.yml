@@ -17,14 +17,26 @@ jobs:
         working-directory: ./vscode
         run: | 
           yarn gulp server-min
+      - name: Determine archive filename
+        uses: haya14busa/action-cond@v1
+        id: archive
+        with:
+          cond: ${{ runner.os == "Windows" }}
+          if_true: 'windows.zip'
+          if_false: '${{ runner.os }}.tar.gz'
       - name: Bundle tarfile
+        if: ${{ runner.os  != "Windows"}}
         run: |
-          tar cfzv bundle.tar.gz server-pkg/
-      - name: Tar sanity check
+          tar cfzv ${{ steps.archive.outputs.value }} server-pkg/
+      - name: Bundle zip
+        if: ${{ runner.os == "Windows" }}
+        run: |
+          Compress-Archive -LiteralPath ./server-pkg/ -DestinationPath ./windows.zip
+      - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
           name: build-artifact
-          path: ./bundle.tar.gz
+          path: ${{ steps.archive.outputs.value }}
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ""
