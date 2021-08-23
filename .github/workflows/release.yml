@@ -30,14 +30,33 @@ jobs:
           cond: ${{ runner.os == 'Windows' }}
           if_true: 'windows.zip'
           if_false: '${{ runner.os }}.tar.gz'
+      - if: ${{ runner.os == 'Windows' }}
+        name: Download Node.js (Windows)
+        run: |
+          curl -o node.zip https://nodejs.org/dist/v14.17.5/node-v14.17.5-win-x64.zip
+          Expand-Archive -LiteralPath node.zip -DestinationPath node/
+      - if: ${{ runner.os == 'Linux' }}
+        name: Download Node.js (Linux)
+        run: |
+          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
+          mkdir bundle/node
+          tar -xvf node.tar.xz --directory=bundle/node
+      - if: ${{ runner.os == 'macOS' }}
+        name: Download Node.js (macOS)
+        run: |
+          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
+          mkdir bundle/node
+          tar -xvf node.tar.xz --directory=bundle/node
+      - name: Move build output
+        run: mv server-pkg/ bundle/
       - name: Bundle tarfile
         if: ${{ runner.os  != 'Windows'}}
         run: |
-          tar cfzv ${{ steps.archive.outputs.value }} server-pkg/
+          tar cfzv ${{ steps.archive.outputs.value }} bundle/
       - name: Bundle zip
         if: ${{ runner.os == 'Windows' }}
         run: |
-          Compress-Archive -Path server-pkg\* -CompressionLevel Fastest -DestinationPath windows.zip
+          Compress-Archive -Path bundle\* -CompressionLevel Fastest -DestinationPath windows.zip
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
