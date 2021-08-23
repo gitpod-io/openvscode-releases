@@ -37,7 +37,7 @@ jobs:
       - name: Bundle zip
         if: ${{ runner.os == 'Windows' }}
         run: |
-          Compress-Archive -LiteralPath ./server-pkg/ -DestinationPath ./windows.zip
+          Compress-Archive -Path server-pkg\* -CompressionLevel Fastest -DestinationPath windows.zip
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
