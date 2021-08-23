@@ -34,21 +34,29 @@ jobs:
         name: Download Node.js (Windows)
         run: |
           curl -o node.zip https://nodejs.org/dist/v14.17.5/node-v14.17.5-win-x64.zip
-          Expand-Archive -LiteralPath node.zip -DestinationPath node/
+          Expand-Archive -LiteralPath node.zip -DestinationPath bundle/node
       - if: ${{ runner.os == 'Linux' }}
         name: Download Node.js (Linux)
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
-          mkdir bundle/node
+          mkdir -p bundle/node
           tar -xvf node.tar.xz --directory=bundle/node
+          mv bundle/node/node-*/* bundle/node/
+          rm -rf bundle/node-*/
       - if: ${{ runner.os == 'macOS' }}
         name: Download Node.js (macOS)
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
-          mkdir bundle/node
+          mkdir -p bundle/node
           tar -xvf node.tar.xz --directory=bundle/node
+          mv bundle/node/node-*/* bundle/node/
+          rm -rf bundle/node-*/
       - name: Move build output
         run: mv server-pkg/ bundle/
+      - if: ${{ runner.os != 'Windows' }}
+        name: Create startup script (Linux & macOS)
+        run: echo 'exec /ide/node/bin/ ./out/gitpod.js "$@"' > bundle/startup.sh
+
       - name: Bundle tarfile
         if: ${{ runner.os  != 'Windows'}}
         run: |
