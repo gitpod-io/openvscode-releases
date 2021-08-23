@@ -57,10 +57,10 @@ jobs:
         run: mv server-pkg/ bundle/
       - if: ${{ runner.os != 'Windows' }}
         name: Create startup script (Linux & macOS)
-        run: echo 'exec ./node/bin/ ./out/gitpod.js "$@"' > bundle/startup.sh
+        run: echo 'exec ./node/bin/ ./server-pkg/out/server.js "$@"' > bundle/startup.sh
       - if: ${{ runner.os == 'Windows' }}
         name: Create startup script (Windows)
-        run: echo 'node/node.exe out/gitpod.js "$@"' > bundle/startup.cmd
+        run: echo '.\node\node.exe .\server-pkg\out\gitpod.js' > bundle/startup.cmd
       - name: Bundle tarfile
         if: ${{ runner.os  != 'Windows'}}
         run: |
