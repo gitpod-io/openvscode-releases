@@ -38,7 +38,7 @@ jobs:
       - if: ${{ runner.os == 'Linux' }}
         name: Download Node.js (Linux)
         run: |
-          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
+          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
           mkdir -p bundle/node
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
@@ -46,7 +46,7 @@ jobs:
       - if: ${{ runner.os == 'macOS' }}
         name: Download Node.js (macOS)
         run: |
-          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
+          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
           mkdir -p bundle/node
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
@@ -56,8 +56,9 @@ jobs:
       - if: ${{ runner.os != 'Windows' }}
         name: Create startup script (Linux & macOS)
         run: |
-          echo 'exec ./node/bin/ ./server-pkg/out/server.js "$@"' > bundle/startup.sh
+          echo '#!/bin/bash\nexec ./node/bin/node ./server-pkg/out/server.js "$@"' > bundle/startup.sh
           chmod u+x bundle/startup.sh
+          chmod -R ugo-wrx ./node/bin/
       - if: ${{ runner.os == 'Windows' }}
         name: Create startup script (Windows)
         run: echo '.\node\node.exe .\server-pkg\out\server.js' > bundle/startup.cmd
