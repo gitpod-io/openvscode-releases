@@ -16,7 +16,7 @@ jobs:
           node-version: '14'
       - name: Install dependencies
         working-directory: ./vscode
-        run: yarn
+        run: yarn --frozen-lockfile --network-timeout 180000
       - name: Prepare for distribution
         working-directory: ./vscode
         run: yarn gulp server-min
