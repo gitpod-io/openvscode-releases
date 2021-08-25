@@ -68,7 +68,7 @@ jobs:
       - name: Bundle zip
         if: ${{ runner.os == 'Windows' }}
         run: |
-          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath windows.zip
+          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ steps.archive.outputs.value }}
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
