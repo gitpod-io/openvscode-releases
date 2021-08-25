@@ -19,8 +19,7 @@ jobs:
         run: yarn
       - name: Prepare for distribution
         working-directory: ./vscode
-        run: |
-          yarn gulp server-min
+        run: yarn gulp server-min
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
