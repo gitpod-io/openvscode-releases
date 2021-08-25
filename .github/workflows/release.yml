@@ -64,7 +64,7 @@ jobs:
       - name: Bundle tarfile
         if: ${{ runner.os  != 'Windows'}}
         run: |
-          tar cfzv ${{ steps.archive.outputs.value }} bundle/ > /dev/null
+          sudo tar cfzv ${{ steps.archive.outputs.value }} bundle/ > /dev/null
       - name: Bundle zip
         if: ${{ runner.os == 'Windows' }}
         run: |
