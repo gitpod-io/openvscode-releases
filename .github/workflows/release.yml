@@ -39,7 +39,7 @@ jobs:
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
           mkdir -p bundle/node
-          tar -xf node.tar.xz --directory=bundle/node
+          tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
           rm -rf bundle/node-*/
       - if: ${{ runner.os == 'macOS' }}
