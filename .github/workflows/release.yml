@@ -20,21 +20,14 @@ jobs:
       - name: Prepare for distribution
         working-directory: ./vscode
         run: yarn gulp server-min
-      - name: Determine archive filename
-        uses: haya14busa/action-cond@v1
-        id: archive
-        with:
-          cond: ${{ runner.os == 'Windows' }}
-          if_true: 'code-web-server-v1.0.0-windows-x64.zip'
-          if_false: 'code-web-server-v1.0.0-${{ runner.os }}-x64.tar.gz'
-      - if: ${{ runner.os == 'Windows' }}
+      - if: runner.os == 'Windows'
         name: Download Node.js (Windows)
         run: |
           curl -o node.zip https://nodejs.org/dist/v14.17.5/node-v14.17.5-win-x64.zip
           Expand-Archive -LiteralPath node.zip -DestinationPath bundle/node
           mv bundle/node/node-*/* bundle/node/
           rm bundle/node-*/
-      - if: ${{ runner.os == 'Linux' }}
+      - if: runner.os == 'Linux'
         name: Download Node.js (Linux)
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
@@ -42,7 +35,7 @@ jobs:
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
           rm -rf bundle/node-*/
-      - if: ${{ runner.os == 'macOS' }}
+      - if: runner.os == 'macOS'
         name: Download Node.js (macOS)
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
@@ -52,7 +45,17 @@ jobs:
           rm -rf bundle/node-*/
       - name: Move build output
         run: mv server-pkg/ bundle/
-      - if: ${{ runner.os != 'Windows' }}
+      - name: Get the VSC version (Linux & macOS)
+        if: ${{ runner.os != 'Windows' }}
+        run: echo "VERSION=$(./bundle/node/bin/node -p -e "require('./server-pkg/package.json').version")" >> $GITHUB_ENV
+      - name: Determine archive filename
+        uses: haya14busa/action-cond@v1
+        id: archive
+        with:
+          cond: ${{ runner.os == 'Windows' }}
+          if_true: code-web-server-v$(.\node\node.exe -p -e "require('./server-pkg/package.json').version")-windows-x64.zip
+          if_false: 'code-web-server-v$VERSION-${{ runner.os }}-x64.tar.gz'
+      - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
           echo '#!/bin/bash\nexec ./node/bin/node ./server-pkg/out/server.js "$@"' > bundle/startup.sh
@@ -63,11 +66,11 @@ jobs:
         name: Create startup script (Windows)
         run: echo '.\node\node.exe .\server-pkg\out\server.js' > bundle/startup.cmd
       - name: Bundle tarfile
-        if: ${{ runner.os  != 'Windows'}}
+        if: runner.os  != 'Windows'
         run: |
           sudo tar cfzv ${{ steps.archive.outputs.value }} bundle/ > /dev/null
       - name: Bundle zip
-        if: ${{ runner.os == 'Windows' }}
+        if: runner.os == 'Windows'
         run: |
           Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ steps.archive.outputs.value }}
       - name: Archive sanity check
