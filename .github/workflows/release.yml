@@ -52,8 +52,8 @@ jobs:
           version: node -p -e "require('./bundle/server-pkg/package.json').version"
         with:
           cond: ${{ runner.os == 'Windows' }}
-          if_true: code-web-server-v{{ env.version }}-windows-x64.zip
-          if_false: code-web-server-v{{ env.version }}-${{ runner.os }}-x64.tar.gz
+          if_true: 'code-web-server-v{{ env.version }}-windows-x64.zip'
+          if_false: 'code-web-server-v{{ env.version }}-${{ runner.os }}-x64.tar.gz'
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
