@@ -53,7 +53,7 @@ jobs:
         id: archive
         with:
           cond: ${{ runner.os == 'Windows' }}
-          if_true: code-web-server-v$(.\node\node.exe -p -e "require('./server-pkg/package.json').version")-windows-x64.zip
+          if_true: code-web-server-v$(.\bundle\node\node.exe -p -e "require('./server-pkg/package.json').version")-windows-x64.zip
           if_false: 'code-web-server-v$VERSION-${{ runner.os }}-x64.tar.gz'
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
