@@ -47,13 +47,13 @@ jobs:
         run: mv server-pkg/ bundle/
       - name: Get the VSC version (Linux & macOS)
         if: ${{ runner.os != 'Windows' }}
-        run: echo "VERSION=$(./bundle/node/bin/node -p -e "require('./server-pkg/package.json').version")" >> $GITHUB_ENV
+        run: echo "VERSION=$(./bundle/node/bin/node -p -e "require('./bundle/server-pkg/package.json').version")" >> $GITHUB_ENV
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
         with:
           cond: ${{ runner.os == 'Windows' }}
-          if_true: code-web-server-v$(.\bundle\node\node.exe -p -e "require('./server-pkg/package.json').version")-windows-x64.zip
+          if_true: code-web-server-v$(.\bundle\node\node.exe -p -e "require('.\bundle\server-pkg\package.json').version")-windows-x64.zip
           if_false: 'code-web-server-v$VERSION-${{ runner.os }}-x64.tar.gz'
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
