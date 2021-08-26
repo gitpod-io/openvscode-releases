@@ -67,13 +67,13 @@ jobs:
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
         env:
-          filename: $(${{ steps.archive.outputs.value }})
+          filename: ${{ steps.archive.outputs.value }}
         run: |
           sudo tar cfzv ${{ env.filename }} bundle/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
         env:
-          version: $(${{ steps.archive.outputs.value }})
+          version: ${{ steps.archive.outputs.value }}
         run: |
           Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ env.version }}
       - name: Archive sanity check
