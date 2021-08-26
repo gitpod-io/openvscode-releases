@@ -67,9 +67,9 @@ jobs:
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
         env:
-          version: $(${{ steps.archive.outputs.value }})
+          filename: $(${{ steps.archive.outputs.value }})
         run: |
-          sudo tar cfzv ${{ env.version }} bundle/ > /dev/null
+          sudo tar cfzv ${{ env.filename }} bundle/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
         env:
@@ -79,10 +79,10 @@ jobs:
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         env:
-          version: $(${{ steps.archive.outputs.value }})
+          filename: $(${{ steps.archive.outputs.value }})
         with:
           name: ${{ runner.os }}-x64
-          path: ${{ env.version }}
+          path: ${{ env.filename }}
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ''
