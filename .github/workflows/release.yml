@@ -7,7 +7,7 @@ jobs:
       matrix:
         os: [ubuntu-18.04, macos-11, windows-latest]
     runs-on: ${{ matrix.os }}
-    name: Build on ${{ matrix.os }}
+    name: Build on ${{ matrix.os }}      
     steps:
       - name: Check out the vscode repository
         run: git clone https://github.com/gitpod-io/vscode --depth=1 --branch web-server
@@ -53,7 +53,7 @@ jobs:
         id: archive
         with:
           cond: ${{ runner.os == 'Windows' }}
-          if_true: code-web-server-v$(.\bundle\node\node.exe -p -e "require('./bundle/server-pkg/package.json').version")-windows-x64.zip
+          if_true: code-web-server-v$(node -p -e "require('./bundle/server-pkg/package.json').version")-windows-x64.zip
           if_false: 'code-web-server-v$VERSION-${{ runner.os }}-x64.tar.gz'
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
@@ -67,17 +67,23 @@ jobs:
         run: curl -o bundle/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.cmd
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
+        env:
+          version: $(${{ steps.archive.outputs.value }})
         run: |
-          sudo tar cfzv ${{ steps.archive.outputs.value }} bundle/ > /dev/null
+          sudo tar cfzv ${{ env.version }} bundle/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
+        env:
+          version: $(${{ steps.archive.outputs.value }})
         run: |
-          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ steps.archive.outputs.value }}
+          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ env.version }}
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
+        env:
+          version: $(${{ steps.archive.outputs.value }})
         with:
           name: ${{ runner.os }}-x64
-          path: ${{ steps.archive.outputs.value }}
+          path: ${{ env.version }}
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ''
