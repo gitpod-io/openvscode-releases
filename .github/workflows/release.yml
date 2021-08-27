@@ -66,24 +66,24 @@ jobs:
         if: runner.os  != 'Windows'
         env:
           fileext: ${{ steps.archive.outputs.value }}
-          version: node -p -e "require('./bundle/server-pkg/package.json').version"
-          filename: code-web-server-v${{ env.version }}-${{ runner.os }}-x64${{ env.fileext }}
+          version: $(node -p -e "require('./bundle/server-pkg/package.json').version")
+          filename: code-web-server-v${{ env.version }}-${{ runner.os }}-x64.${{ env.fileext }}
         run: |
           sudo tar cfzv ${{ env.filename }} bundle/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
         env:
           fileext: ${{ steps.archive.outputs.value }}
-          version: node -p -e "require('./bundle/server-pkg/package.json').version"
-          filename: code-web-server-v${{ env.version }}-${{ runner.os }}-x64${{ env.fileext }}
+          version: $(node -p -e "require('./bundle/server-pkg/package.json').version")
+          filename: code-web-server-v${{ env.version }}-${{ runner.os }}-x64.${{ env.fileext }}
         run: |
           Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ env.filename }}
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         env:
           fileext: ${{ steps.archive.outputs.value }}
-          version: node -p -e "require('./bundle/server-pkg/package.json').version"
-          filename: code-web-server-v${{ env.version }}-${{ runner.os }}-x64${{ env.fileext }}
+          version: $(node -p -e "require('./bundle/server-pkg/package.json').version")
+          filename: code-web-server-v${{ env.version }}-${{ runner.os }}-x64.${{ env.fileext }}
         with:
           name: ${{ runner.os }}-x64
           path: ${{ env.filename }}
