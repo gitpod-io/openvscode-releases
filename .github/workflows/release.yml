@@ -52,6 +52,11 @@ jobs:
           cond: ${{ runner.os == 'Windows' }}
           if_true: 'zip'
           if_false: 'tar.gz'
+      - name: Set environment variables
+        run: |
+          echo "EXTENSION=${{ steps.archive.outputs.value }}" >> $GITHUB_ENV
+          echo "VERSION=$(node -p -e "require('./bundle/server-pkg/package.json').version")" >> $GITHUB_ENV
+          echo "ARCHIVE_NAME=code-web-server-v${{ env.VERSION }}-${{ runner.os }}-x64.${{ env.EXTENSION }}" >> $GITHUB_ENV
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
@@ -64,26 +69,17 @@ jobs:
         run: curl -o bundle/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.cmd
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
-        env:
-          fileext: ${{ steps.archive.outputs.value }}
-          version: $(node -p -e "require('./bundle/server-pkg/package.json').version")
         run: |
-          sudo tar cfzv code-web-server-v${{ env.version }}-${{ runner.os }}-x64.${{ env.fileext }} bundle/ > /dev/null
+          sudo tar cfzv ${{ env.ARCHIVE_NAME }} bundle/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
-        env:
-          fileext: ${{ steps.archive.outputs.value }}
-          version: $(node -p -e "require('./bundle/server-pkg/package.json').version")
         run: |
-          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath code-web-server-v${{ env.version }}-${{ runner.os }}-x64.${{ env.fileext }}
+          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_NAME }}
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
-        env:
-          fileext: ${{ steps.archive.outputs.value }}
-          version: $(node -p -e "require('./bundle/server-pkg/package.json').version")
         with:
           name: ${{ runner.os }}-x64
-          path: code-web-server-v${{ env.version }}-${{ runner.os }}-x64.${{ env.fileext }}
+          path: ${{ env.ARCHIVE_NAME }}
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ''
