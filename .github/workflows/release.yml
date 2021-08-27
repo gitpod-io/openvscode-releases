@@ -43,8 +43,8 @@ jobs:
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
           rm -rf bundle/node-*/
-      - name: Move build output
-        run: mv server-pkg/ bundle/
+      # - name: Move build output
+      #  run: mv server-pkg/ bundle/
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
