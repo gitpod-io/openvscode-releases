@@ -11,15 +11,15 @@ jobs:
     steps:
       - name: Check out the vscode repository
         run: git clone https://github.com/gitpod-io/vscode --depth=1 --branch web-server
-      # - uses: actions/setup-node@v2
-      #   with:
-      #     node-version: '14'
-      # - name: Install dependencies
-      #   working-directory: ./vscode
-      #   run: yarn --frozen-lockfile --network-timeout 180000
-      # - name: Prepare for distribution
-      #   working-directory: ./vscode
-      #   run: yarn gulp server-min
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Install dependencies
+        working-directory: ./vscode
+        run: yarn --frozen-lockfile --network-timeout 180000
+      - name: Prepare for distribution
+        working-directory: ./vscode
+        run: yarn gulp server-min
       - if: runner.os == 'Windows'
         name: Download Node.js (Windows)
         run: |
@@ -43,8 +43,8 @@ jobs:
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
           rm -rf bundle/node-*/
-      # - name: Move build output
-      #  run: mv server-pkg/ bundle/
+      - name: Move build output
+        run: mv server-pkg/ bundle/
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
