@@ -29,7 +29,7 @@ jobs:
         id: cache
         with:
           path: |
-            bundle/
+            server-pkg/
             vscode/
           key: ${{ runner.os }}-${{ env.CACHE_KEY }}
       - name: Install dependencies
@@ -64,7 +64,7 @@ jobs:
           mv bundle/node/node-*/* bundle/node/
           rm -rf bundle/node-*/
       - name: Move build output
-        run: mv server-pkg/ bundle/
+        run: cp server-pkg/ bundle/
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
