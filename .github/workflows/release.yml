@@ -81,9 +81,12 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           chcp 65001
-          echo ("ARCHIVE_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-${{ runner.os }}-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-${{ runner.os }}-x64") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_FULL_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-${{ runner.os }}-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
       - name: Set archive file name
-        run: echo "ARCHIVE_NAME=code-web-server-v${{ env.VERSION }}-${{ runner.os }}-x64.${{ env.EXTENSION }}" >> $GITHUB_ENV
+        run: |
+          echo "ARCHIVE_NAME=code-web-server-v${{ env.VERSION }}-${{ runner.os }}-x64" >> $GITHUB_ENV
+          echo "ARCHIVE_FULL_NAME=code-web-server-v${{ env.VERSION }}-${{ runner.os }}-x64.${{ env.EXTENSION }}" >> $GITHUB_ENV
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
@@ -99,16 +102,16 @@ jobs:
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
         run: |
-          sudo tar cfzv ${{ env.ARCHIVE_NAME }} bundle/ > /dev/null
+          sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
         run: |
-          Compress-Archive -Path bundle\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_NAME }}
+          Compress-Archive -Path ${{ env.ARCHIVE_NAME }}\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_FULL_NAME }}
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
           name: ${{ runner.os }}-x64
-          path: ${{ env.ARCHIVE_NAME }}
+          path: ${{ env.ARCHIVE_FULL_NAME }}
       # - uses: ncipollo/release-action@v1
       #   with:
       #     artifacts: ''
