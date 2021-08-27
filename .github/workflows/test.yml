@@ -1,0 +1,27 @@
+name: Release the VS Code server bundles
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    name: Build on cringe
+    steps:
+      - name: Determine archive filename
+        uses: haya14busa/action-cond@v1
+        id: archive
+        with:
+          cond: ${{ runner.os == 'Windows' }}
+          if_true: 'zip'
+          if_false: 'tar.gz'
+      - run: echo "PACKAGE_VERSION=$(node -p -e "'1.0'")" >> $GITHUB_ENV
+      - run: echo "EXTENSION=${{ steps.archive.outputs.value }}" >> $GITHUB_ENV
+      - name: Bundle tarfile
+        if: runner.os  != 'Windows'
+        run: |
+          printenv
+      - name: Bundle zip
+        env:
+          a: $(node -p -e "'frick'")
+          b: ${{ steps.archive.outputs.value }}
+        run: |
+          echo ${{ env.PACKAGE_VERSION }}.${{ env.EXTENSION }}
