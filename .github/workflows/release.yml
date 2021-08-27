@@ -24,27 +24,27 @@ jobs:
         name: Download Node.js (Windows)
         run: |
           curl -o node.zip https://nodejs.org/dist/v14.17.5/node-v14.17.5-win-x64.zip
-          Expand-Archive -LiteralPath node.zip -DestinationPath bundle/node
-          mv bundle/node/node-*/* bundle/node/
-          rm bundle/node-*/
+          Expand-Archive -LiteralPath node.zip -DestinationPath ${{ env.ARCHIVE_NAME }}/node
+          mv ${{ env.ARCHIVE_NAME }}/node/node-*/* ${{ env.ARCHIVE_NAME }}/node/
+          rm ${{ env.ARCHIVE_NAME }}/node-*/
       - if: runner.os == 'Linux'
         name: Download Node.js (Linux)
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
-          mkdir -p bundle/node
-          tar -xvf node.tar.xz --directory=bundle/node
-          mv bundle/node/node-*/* bundle/node/
-          rm -rf bundle/node-*/
+          mkdir -p ${{ env.ARCHIVE_NAME }}/node
+          tar -xvf node.tar.xz --directory=${{ env.ARCHIVE_NAME }}/node
+          mv ${{ env.ARCHIVE_NAME }}/node/node-*/* ${{ env.ARCHIVE_NAME }}/node/
+          rm -rf ${{ env.ARCHIVE_NAME }}/node-*/
       - if: runner.os == 'macOS'
         name: Download Node.js (macOS)
         run: |
           curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
-          mkdir -p bundle/node
-          tar -xvf node.tar.xz --directory=bundle/node
-          mv bundle/node/node-*/* bundle/node/
-          rm -rf bundle/node-*/
+          mkdir -p ${{ env.ARCHIVE_NAME }}/node
+          tar -xvf node.tar.xz --directory=${{ env.ARCHIVE_NAME }}/node
+          mv ${{ env.ARCHIVE_NAME }}/node/node-*/* ${{ env.ARCHIVE_NAME }}/node/
+          rm -rf ${{ env.ARCHIVE_NAME }}/node-*/
       - name: Move build output
-        run: mv server-pkg/ bundle/
+        run: mv server-pkg/ ${{ env.ARCHIVE_NAME }}/
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
@@ -67,17 +67,17 @@ jobs:
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
-          curl -o bundle/startup.sh https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.sh
-          chmod u+x bundle/startup.sh
-          sudo chmod -R ugo-wrx ./bundle/node/bin/
-          sudo chmod +rx ./bundle/node/bin/node
+          curl -o ${{ env.ARCHIVE_NAME }}/startup.sh https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.sh
+          chmod u+x ${{ env.ARCHIVE_NAME }}/startup.sh
+          sudo chmod -R ugo-wrx ./${{ env.ARCHIVE_NAME }}/node/bin/
+          sudo chmod +rx ./${{ env.ARCHIVE_NAME }}/node/bin/node
       - if: ${{ runner.os == 'Windows' }}
         name: Create startup script (Windows)
-        run: curl -o bundle/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.cmd
+        run: curl -o ${{ env.ARCHIVE_NAME }}/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.cmd
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
         run: |
-          sudo tar cfzv ${{ env.ARCHIVE_NAME }} bundle/ > /dev/null
+          sudo tar cfzv ${{ env.ARCHIVE_NAME }} ${{ env.ARCHIVE_NAME }}/ > /dev/null
       - name: Bundle zip
         if: runner.os == 'Windows'
         run: |
