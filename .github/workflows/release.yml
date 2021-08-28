@@ -119,13 +119,19 @@ jobs:
     runs-on: ubuntu-latest
     name: Create the release
     steps:
-      - uses: actions/checkout@v2
-      - name: Download script dependencies
-        working-directory: scripts/
-        run: yarn
-      - name: Download artifacts
-        working-directory: scripts/
-        run: node handle-artifacts.js
+      - name: Download artifacts - macos
+        uses: actions/download-artifact@v1
+        with:
+          name: macOS-x64
+      - name: Download artifacts - linux
+        uses: actions/download-artifact@v1
+        with:
+          name: Linux-x64
+      - name: Download artifacts - windows
+        uses: actions/download-artifact@v1
+        with:
+          name: Windows-x64
+      - run: ls -a
     #   - name: Create release
     #     uses: ncipollo/release-action@v1
     #     with:
