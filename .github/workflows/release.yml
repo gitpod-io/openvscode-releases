@@ -3,6 +3,8 @@ on: [workflow_dispatch]
 
 jobs:
   build:
+    env:
+      NODE_VERSION: v14.17.5
     strategy:
       matrix:
         os: [ubuntu-18.04, macos-11, windows-latest]
@@ -45,14 +47,14 @@ jobs:
       - if: runner.os == 'Windows'
         name: Download Node.js (Windows)
         run: |
-          curl -o node.zip https://nodejs.org/dist/v14.17.5/node-v14.17.5-win-x64.zip
+          curl -o node.zip https://nodejs.org/dist/${{ env.NODE_VERSION }}/node-${{ env.NODE_VERSION }}-win-x64.zip
           Expand-Archive -LiteralPath node.zip -DestinationPath bundle/node
           mv bundle/node/node-*/* bundle/node/
           rm bundle/node-*/
       - if: runner.os == 'Linux'
         name: Download Node.js (Linux)
         run: |
-          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-linux-x64.tar.xz
+          curl -o node.tar.xz https://nodejs.org/dist/${{ env.NODE_VERSION }}/node-${{ env.NODE_VERSION }}-linux-x64.tar.xz
           mkdir -p bundle/node
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
@@ -60,7 +62,7 @@ jobs:
       - if: runner.os == 'macOS'
         name: Download Node.js (macOS)
         run: |
-          curl -o node.tar.xz https://nodejs.org/dist/v14.17.5/node-v14.17.5-darwin-x64.tar.gz
+          curl -o node.tar.xz https://nodejs.org/dist/${{ env.NODE_VERSION }}/node-${{ env.NODE_VERSION }}-darwin-x64.tar.gz
           mkdir -p bundle/node
           tar -xvf node.tar.xz --directory=bundle/node
           mv bundle/node/node-*/* bundle/node/
