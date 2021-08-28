@@ -92,12 +92,16 @@ jobs:
     name: Create the release      
     steps:
       - uses: actions/checkout@v2
+      - name: Download script dependencies
+        run: |
+          cd scripts/
+          yarn
       - name: Download artifacts
         run: node scripts/handle-artifacts.js
-      - name: Create release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: ''
-          bodyFile: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
-     #    repo: vscode
-          token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
+    #   - name: Create release
+    #     uses: ncipollo/release-action@v1
+    #     with:
+    #       artifacts: ''
+    #       bodyFile: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
+    #       repo: vscode
+    #       token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
