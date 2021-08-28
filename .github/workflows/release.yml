@@ -119,18 +119,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Create the release
     steps:
-      - name: Download artifacts - macos
-        uses: actions/download-artifact@v1
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
         with:
-          name: macOS-x64
-      - name: Download artifacts - linux
-        uses: actions/download-artifact@v1
-        with:
-          name: Linux-x64
-      - name: Download artifacts - windows
-        uses: actions/download-artifact@v1
-        with:
-          name: Windows-x64
+          path: outputs/
       - run: ls -R
     #   - name: Create release
     #     uses: ncipollo/release-action@v1
