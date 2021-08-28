@@ -113,7 +113,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ runner.os }}-x64
-          path: ${{ env.ARCHIVE_NAME }}
+          path: ${{ env.ARCHIVE_FULL_NAME }}
   upload:
     needs: build 
     runs-on: ubuntu-latest
