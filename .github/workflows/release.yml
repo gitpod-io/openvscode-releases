@@ -131,7 +131,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: Windows-x64
-      - run: ls -a
+      - run: ls -R
     #   - name: Create release
     #     uses: ncipollo/release-action@v1
     #     with:
