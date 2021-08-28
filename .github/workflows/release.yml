@@ -131,7 +131,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          bodyFile: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
-          tag: ${{ env.TAG }}
+          body: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
+          tag: v${{ env.TAG }}
           # repo: vscode
           token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
