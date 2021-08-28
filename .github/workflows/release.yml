@@ -88,8 +88,9 @@ jobs:
           name: ${{ runner.os }}-x64
           path: ${{ env.ARCHIVE_NAME }}
   upload:
+    needs: build 
     runs-on: ubuntu-latest
-    name: Create the release      
+    name: Create the release
     steps:
       - uses: actions/checkout@v2
       - name: Download script dependencies
