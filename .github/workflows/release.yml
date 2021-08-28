@@ -121,11 +121,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Download script dependencies
-        run: |
-          cd scripts/
-          yarn
+        working-directory: scripts/
+        run: yarn
       - name: Download artifacts
-        run: node scripts/handle-artifacts.js
+        working-directory: scripts/
+        run: node handle-artifacts.js
     #   - name: Create release
     #     uses: ncipollo/release-action@v1
     #     with:
