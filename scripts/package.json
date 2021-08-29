@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "@actions/artifact": "^0.5.2",
-    "node-fetch": "^2.6.1",
-    "request": "^2.88.2"
-  }
-}
