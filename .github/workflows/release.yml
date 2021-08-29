@@ -116,9 +116,24 @@ jobs:
         with:
           name: ${{ runner.os }}-x64
           path: ${{ env.ARCHIVE_FULL_NAME }}
-      # - uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: ''
-      #     bodyFile: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
-      #     repo: vscode
-      #     token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
+  upload:
+    needs: build 
+    runs-on: ubuntu-latest
+    name: Create the release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: outputs/
+      - run: ls -R
+      - run: echo "TAG=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+      - name: Get result
+        run: echo "${{steps.set-result.outputs.result}}"
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+          body: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
+          tag: v${{ env.TAG }}
+          # repo: vscode
+          token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
