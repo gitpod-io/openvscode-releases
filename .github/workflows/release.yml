@@ -85,8 +85,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           chcp 65001
-          echo ("ARCHIVE_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-"+ $("${{ runner.os }}".tolower())')+"-x64") >> $env:GITHUB_ENV
-          echo ("ARCHIVE_FULL_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-"+$("${{ runner.os }}".tolower())+-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_FULL_NAME=code-web-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
       - name: Set archive file name
         run: |
           echo "ARCHIVE_NAME=code-web-server-v${{ env.VERSION }}-$(echo ${{ runner.os }} | tr  '[:upper:]' '[:lower:]')-x64" >> $GITHUB_ENV
