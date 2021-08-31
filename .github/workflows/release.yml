@@ -32,7 +32,6 @@ jobs:
         with:
           path: |
             server-pkg/
-            vscode/
             server-pkg-server/
             server-pkg-web/
           key: ${{ runner.os }}-${{ env.CACHE_KEY }}
