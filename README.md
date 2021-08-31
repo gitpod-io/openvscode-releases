@@ -26,14 +26,9 @@ cd code-web-server-v*-x64
 
 ### Docker
 
-#### Building the image
+#### Building and starting the image
 ```bash
-docker build -t vscode .
-```
-
-#### Starting the container
-```bash
-docker run -d -p 3000:3000 vscode
+docker-compose up
 ```
 
 After this, visit [localhost:3000](http://localhost:3000).
