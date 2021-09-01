@@ -142,6 +142,12 @@ jobs:
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Linux-x64
+      - name: Set server version
+        run: echo "VERSION=$(ls Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
       - name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
@@ -152,4 +158,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
+          build-args: SERVER_VERSION=${{ env.VERSION }}
           tags: gitpod/vscode:latest

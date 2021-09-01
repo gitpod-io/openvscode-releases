@@ -4,7 +4,6 @@ FROM node:${NODE_VERSION}-buster
 RUN apt update
 RUN apt install -y git wget
 
-ARG version=latest
 ARG SERVER_VERSION=v1.59.0
 WORKDIR /home/
 
