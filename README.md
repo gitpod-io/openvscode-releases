@@ -26,13 +26,8 @@ cd code-web-server-v*-x64
 
 ### Docker
 
-#### Building the image
-```bash
-docker build -t vscode .
-```
-
 #### Starting the container
-When using these commands, you can add a `d` to the end of the command to detach from the container after starting it. This will make it run as a daemon in the background.
+When using these commands, you can add a `-d` to the end of the command to detach from the container after starting it. This will make it run as a daemon in the background.
 
 ```bash
 docker run -d -p  3000:3000 vscode
@@ -44,3 +39,8 @@ docker run -p 3000:3000 -v "%cd%:/home/workspace:cached" gitpod/vscode
 ```
 
 After this, visit [localhost:3000](http://localhost:3000).
+
+#### Building the image
+```bash
+docker build -t gitpod/vscode .
+```
