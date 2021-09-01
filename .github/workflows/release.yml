@@ -135,3 +135,21 @@ jobs:
       #     tag: v${{ env.TAG }}
       #     # repo: vscode
       #     token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Build and publish Docker image
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: gitpod/vscode:latest
