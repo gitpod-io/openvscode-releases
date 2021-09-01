@@ -145,9 +145,10 @@ jobs:
       - name: Download Linux artifact
         uses: actions/download-artifact@v2
         with:
+          path: outputs/
           name: Linux-x64
       - name: Set server version
-        run: echo "VERSION=$(ls Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+        run: echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
       - name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
