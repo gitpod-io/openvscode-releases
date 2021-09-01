@@ -159,5 +159,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          build-args: SERVER_VERSION=${{ env.VERSION }}
+          build-args: SERVER_VERSION=v${{ env.VERSION }}
           tags: gitpod/vscode:latest
