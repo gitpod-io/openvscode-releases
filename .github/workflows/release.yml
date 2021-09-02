@@ -148,8 +148,17 @@ jobs:
           name: Linux-x64
       - name: Set server version
         run: echo "VERSION=$(ls outputs/ | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            gitpod/vscode
+          tags: |
+            type=ref,event=release
+            type=semver,pattern=${{ env.VERSION }}
       - name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
