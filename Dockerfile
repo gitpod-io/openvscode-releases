@@ -8,11 +8,11 @@ ARG SERVER_VERSION=v1.59.0
 WORKDIR /home/
 
 # Downloading the latest VSC Server release
-RUN wget https://github.com/gitpod-io/vscode-releases/releases/download/${SERVER_VERSION}/code-web-server-${SERVER_VERSION}-Linux-x64.tar.gz
+RUN wget https://github.com/gitpod-io/vscode-releases/releases/download/${SERVER_VERSION}/code-web-server-${SERVER_VERSION}-linux-x64.tar.gz
 
 # Extracting the release archive
-RUN tar -xzf code-web-server-${SERVER_VERSION}-Linux-x64.tar.gz
-WORKDIR /home/code-web-server-${SERVER_VERSION}-Linux-x64
+RUN tar -xzf code-web-server-${SERVER_VERSION}-linux-x64.tar.gz
+WORKDIR /home/code-web-server-${SERVER_VERSION}-linux-x64
 
 # Creating the user and usergroup
 RUN adduser vscode-server && \
