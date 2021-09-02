@@ -30,7 +30,6 @@ cd code-web-server-v*-x64
 When using these commands, you can add a `-d` to the end of the command to detach from the container after starting it. This will make it run as a daemon in the background.
 
 ```bash
-docker run -d -p  3000:3000 vscode
 # Linux, macOS, or PowerShell
 docker run -p 3000:3000 -v "$(pwd):/home/workspace:cached" gitpod/vscode
 
