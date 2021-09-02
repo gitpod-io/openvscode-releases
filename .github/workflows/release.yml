@@ -94,12 +94,12 @@ jobs:
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
-          curl -o bundle/startup.sh https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.sh
+          curl -o bundle/startup.sh https://raw.githubusercontent.com/gitpod-io/vscode-releases/docker/scripts/startup.sh
           chmod u+x bundle/startup.sh
           sudo chmod -R u+rwx ./bundle/node/bin/
       - if: ${{ runner.os == 'Windows' }}
         name: Create startup script (Windows)
-        run: curl -o bundle/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/main/scripts/startup.cmd
+        run: curl -o bundle/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/docker/scripts/startup.cmd
       - name: Rename the bundle file
         run: mv bundle/ ${{ env.ARCHIVE_NAME }}/
       - name: Bundle tarfile
