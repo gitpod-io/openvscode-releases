@@ -95,8 +95,7 @@ jobs:
         run: |
           cp vscode/resources/server/startup.sh bundle/
           chmod u+x bundle/startup.sh
-          sudo chmod -R ugo-wrx ./bundle/node/bin/
-          sudo chmod +rwx ./bundle/node/bin/node
+          sudo chmod -R u+rwx ./bundle/node/bin/
       - if: ${{ runner.os == 'Windows' }}
         name: Create startup script (Windows)
         run: cp vscode/resources/server/startup.cmd bundle/
@@ -134,3 +133,37 @@ jobs:
       #     tag: v${{ env.TAG }}
       #     # repo: vscode
       #     token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
+  docker:
+    needs: upload
+    runs-on: ubuntu-latest
+    name: Build and publish Docker image
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v2
+        with:
+          path: outputs/
+          name: Linux-x64
+      - name: Set server version
+        run: echo "VERSION=$(ls outputs/ | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            gitpod/vscode
+          tags: |
+            type=semver,pattern={{version}},value=v${{ env.VERSION }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          build-args: SERVER_VERSION=v${{ env.VERSION }}
+          tags: ${{ steps.meta.outputs.tags }}
