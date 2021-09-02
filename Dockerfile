@@ -9,7 +9,6 @@ RUN wget https://github.com/gitpod-io/vscode-releases/releases/download/${SERVER
 
 # Extracting the release archive
 RUN tar -xzf code-web-server-${SERVER_VERSION}-linux-x64.tar.gz
-WORKDIR /home/code-web-server-${SERVER_VERSION}-linux-x64
 
 # Creating the user and usergroup
 RUN adduser vscode-server && \
