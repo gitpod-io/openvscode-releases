@@ -32,7 +32,6 @@ jobs:
         with:
           path: |
             server-pkg/
-            vscode/
             server-pkg-server/
             server-pkg-web/
           key: ${{ runner.os }}-${{ env.CACHE_KEY }}
@@ -94,12 +93,12 @@ jobs:
       - if: runner.os != 'Windows'
         name: Create startup script (Linux & macOS)
         run: |
-          curl -o bundle/startup.sh https://raw.githubusercontent.com/gitpod-io/vscode-releases/docker/scripts/startup.sh
+          cp vscode/resources/server/startup.sh bundle/
           chmod u+x bundle/startup.sh
           sudo chmod -R u+rwx ./bundle/node/bin/
       - if: ${{ runner.os == 'Windows' }}
         name: Create startup script (Windows)
-        run: curl -o bundle/startup.cmd https://raw.githubusercontent.com/gitpod-io/vscode-releases/docker/scripts/startup.cmd
+        run: cp vscode/resources/server/startup.cmd bundle/
       - name: Rename the bundle file
         run: mv bundle/ ${{ env.ARCHIVE_NAME }}/
       - name: Bundle tarfile
