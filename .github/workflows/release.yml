@@ -3,8 +3,6 @@ on: [workflow_dispatch]
 
 jobs:
   build:
-    env:
-      NODE_VERSION: v14.17.5
     strategy:
       matrix:
         os: [ubuntu-18.04, macos-11, windows-latest]
@@ -43,29 +41,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         working-directory: ./vscode
         run: yarn gulp server-min
-      - if: runner.os == 'Windows'
-        name: Download Node.js (Windows)
-        run: |
-          curl -o node.zip https://nodejs.org/dist/${{ env.NODE_VERSION }}/node-${{ env.NODE_VERSION }}-win-x64.zip
-          Expand-Archive -LiteralPath node.zip -DestinationPath bundle/node
-          mv bundle/node/node-*/* bundle/node/
-          rm bundle/node-*/
-      - if: runner.os == 'Linux'
-        name: Download Node.js (Linux)
-        run: |
-          curl -o node.tar.xz https://nodejs.org/dist/${{ env.NODE_VERSION }}/node-${{ env.NODE_VERSION }}-linux-x64.tar.xz
-          mkdir -p bundle/node
-          tar -xvf node.tar.xz --directory=bundle/node
-          mv bundle/node/node-*/* bundle/node/
-          rm -rf bundle/node-*/
-      - if: runner.os == 'macOS'
-        name: Download Node.js (macOS)
-        run: |
-          curl -o node.tar.xz https://nodejs.org/dist/${{ env.NODE_VERSION }}/node-${{ env.NODE_VERSION }}-darwin-x64.tar.gz
-          mkdir -p bundle/node
-          tar -xvf node.tar.xz --directory=bundle/node
-          mv bundle/node/node-*/* bundle/node/
-          rm -rf bundle/node-*/
       - name: Move build output
         run: cp -r server-pkg/ bundle/
       - name: Determine archive filename
@@ -90,15 +65,6 @@ jobs:
         run: |
           echo "ARCHIVE_NAME=code-web-server-v${{ env.VERSION }}-$(echo ${{ runner.os }} | tr  '[:upper:]' '[:lower:]')-x64" >> $GITHUB_ENV
           echo "ARCHIVE_FULL_NAME=code-web-server-v${{ env.VERSION }}-$(echo ${{ runner.os }} | tr  '[:upper:]' '[:lower:]')-x64.${{ env.EXTENSION }}" >> $GITHUB_ENV
-      - if: runner.os != 'Windows'
-        name: Create startup script (Linux & macOS)
-        run: |
-          cp vscode/resources/server/startup.sh bundle/
-          chmod u+x bundle/startup.sh
-          sudo chmod -R u+rwx ./bundle/node/bin/
-      - if: ${{ runner.os == 'Windows' }}
-        name: Create startup script (Windows)
-        run: cp vscode/resources/server/startup.cmd bundle/
       - name: Rename the bundle file
         run: mv bundle/ ${{ env.ARCHIVE_NAME }}/
       - name: Bundle tarfile
