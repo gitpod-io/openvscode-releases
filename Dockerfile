@@ -27,7 +27,10 @@ WORKDIR /home/workspace/
 ENV HOME /home/workspace/
 
 EXPOSE 3000
-ENV USE_LOCAL_GIT true
-ENV SERVER_VERSION=${SERVER_VERSION}
 
-ENTRYPOINT /home/code-web-server-$SERVER_VERSION-linux-x64/startup.sh
+ENV EDITOR=code
+ENV VISUAL=code
+ENV GIT_EDITOR="code --wait"
+
+ENV SERVER_VERSION=${SERVER_VERSION}
+ENTRYPOINT /home/code-web-server-$SERVER_VERSION-linux-x64/server.sh
