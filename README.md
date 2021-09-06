@@ -8,7 +8,7 @@ You can download the latest release for your platform from the [GitHub release p
 
 ### Starting the VS Code Server
 
-#### Linux & macOS
+#### Linux
 
 First, untar the downloaded archive.
 
@@ -31,10 +31,10 @@ When using these commands, you can add a `-d` to the end of the command to detac
 
 ```bash
 # Linux, macOS, or PowerShell
-docker run -p 3000:3000 -v "$(pwd):/home/workspace:cached" gitpod/vscode
+docker run --it --init -p 3000:3000 -v "$(pwd):/home/workspace:cached" gitpod/vscode
 
 # Windows (cmd.exe)
-docker run -p 3000:3000 -v "%cd%:/home/workspace:cached" gitpod/vscode
+docker run --it --init -p 3000:3000 -v "%cd%:/home/workspace:cached" gitpod/vscode
 ```
 
 After this, visit [localhost:3000](http://localhost:3000).

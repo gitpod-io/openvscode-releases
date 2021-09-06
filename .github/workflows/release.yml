@@ -1,11 +1,19 @@
-name: Release the VS Code server bundles
-on: [workflow_dispatch]
+name: Publish VSC Web Server
+on:
+  workflow_dispatch:
+    inputs:
+      uploadGHReleases:
+        description: 'Upload GitHub Releases'
+        required: true
+        default: "false"
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-18.04, macos-11, windows-latest]
+        # os: [ubuntu-18.04, macos-11, windows-latest]
+        # support only ubuntu for now
+        os: [ubuntu-18.04]
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }}      
     steps:
@@ -55,6 +63,7 @@ jobs:
         run: |
           echo "EXTENSION=${{ steps.archive.outputs.value }}" >> $GITHUB_ENV
           echo "VERSION=$(node -p -e "require('./vscode/package.json').version")" >> $GITHUB_ENV
+          echo "VSC_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
       - name: Set environment variables (Windows)
         if: runner.os == 'Windows'
         run: |
@@ -91,14 +100,16 @@ jobs:
           path: outputs/
       - run: ls -R
       - run: echo "TAG=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
-      # - name: Create release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-      #     body: 'A new release of Visual Studio Code server is out, you can find the downloads for the different platforms below.'
-      #     tag: v${{ env.TAG }}
-      #     # repo: vscode
-      #     token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
+      - run: echo "VSC Web Server v${{ env.VERSION }} ([${{ env.VSC_COMMIT }}](https://github.com/gitpod-io/vscode/commit/${{ env.VSC_COMMIT }}))" >> "/tmp/release_body.md"
+      - name: Create release
+        if: github.event.inputs.uploadGHReleases == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+          bodyFile: '/tmp/release_body.md'
+          tag: v${{ env.TAG }}
+          # repo: vscode
+          token: ${{ secrets.GITHUB_TOKEN }} # Todo: add a token with more permissions
   docker:
     needs: upload
     runs-on: ubuntu-latest
