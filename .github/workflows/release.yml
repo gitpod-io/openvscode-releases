@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       uploadGHReleases:
-        description: 'Upload GitHub Releases'
+        description: 'Create GitHub Release'
         required: true
         default: "false"
 
