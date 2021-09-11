@@ -26,6 +26,7 @@ Downloading Visual Studio Code Server is as easy as pie. We can download it by e
 ```
 wget https://github.com/gitpod-io/vscode-releases/releases/download/v1.59.0/code-web-server-v1.59.0-linux-x64.tar.gz -O code-server.tar.gz
 tar -xzf code-server.tar.gz
+rm code-server.tar.gz
 ```
 
 Now we can `cd` into the VSC Server folder and execute the startup script like so:
@@ -50,7 +51,7 @@ We're all set! You can now access your IDE at `http://<your-droplet-ip>:3000`.
 If you want to run the server on boot, you can add this to your Crontab file (`crontab -e`):
 
 ```
-@reboot /root/code-web-server-v1.59.0-linux-x64/server.sh
+@reboot /root/code-web-server-v*-linux-x64/server.sh
 ```
 
 ### Adding a custom domain
