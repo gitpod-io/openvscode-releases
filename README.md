@@ -31,10 +31,10 @@ When using these commands, you can add a `-d` to the end of the command to detac
 
 ```bash
 # Linux, macOS, or PowerShell
-docker run --it --init -p 3000:3000 -v "$(pwd):/home/workspace:cached" gitpod/vscode
+docker run -it --init -p 3000:3000 -v "$(pwd):/home/workspace:cached" gitpod/vscode
 
 # Windows (cmd.exe)
-docker run --it --init -p 3000:3000 -v "%cd%:/home/workspace:cached" gitpod/vscode
+docker run -it --init -p 3000:3000 -v "%cd%:/home/workspace:cached" gitpod/vscode
 ```
 
 After this, visit [localhost:3000](http://localhost:3000).
