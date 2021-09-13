@@ -2,10 +2,10 @@
 
 ## Creating the Droplet
 
-First we need to create the Virtual Machine to host our server on. If you don't have it already, you can just start with [our template](https://cloud.digitalocean.com/droplets/new?use_case=droplet&i=59c3b0&fleetUuid=a8fdcc26-2bf0-449d-8113-e458327192fe&distro=ubuntu&distroImage=ubuntu-20-04-x64&size=s-1vcpu-1gb-amd&region=fra1&options=ipv6) and after that just change a couple of settings, explained below.
+First, we need to create a Virtual Machine to host our server. If you don't have it already, you can just start with [our template](https://cloud.digitalocean.com/droplets/new?use_case=droplet&i=59c3b0&fleetUuid=a8fdcc26-2bf0-449d-8113-e458327192fe&distro=ubuntu&distroImage=ubuntu-20-04-x64&size=s-1vcpu-1gb-amd&region=fra1&options=ipv6) and after that just change a couple of settings, explained below.
 
 - We need to set a password or add an SSH key. For demonstration purposes, it's easier to use a password.
-- We need to do is to check the checkbox <kbd>User data</kbd> and add the following script to the textfield below:
+- We need to do is to check the checkbox <kbd>User data</kbd> and add the following script to the text field below:
 
 ## Initial setup
 
