@@ -13,15 +13,14 @@ You can download the latest release for your platform from the [GitHub release p
 First, untar the downloaded archive.
 
 ```bash
-tar -xzf code-web-server-v*.tar.gz
-
+tar -xzf openvscode-server-v*.tar.gz
 ```
 
 Then, run the web server.
 
 ```bash
-cd code-web-server-v*-x64
-./startup.sh
+cd openvscode-server-v*-x64
+./server.sh
 ```
 
 ### Docker
