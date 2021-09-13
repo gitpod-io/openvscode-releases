@@ -107,14 +107,20 @@ jobs:
           path: outputs/
       - run: ls -R
       - run: echo "TAG=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
-      - name: Create release
-        if: github.event.inputs.uploadGHReleases == 'true'
+      - name: Create test release
+        if: github.event.inputs.uploadGHReleases == 'true' && github.event.inputs.vscodeRepoRelease != 'true'
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
           body: OpenVSCode Server v${{ env.TAG }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
           tag: v${{ env.TAG }}
-          if: github.event.inputs.vscodeRepoRelease == 'true'
+      - name: Create release
+        if: github.event.inputs.uploadGHReleases == 'true' && github.event.inputs.vscodeRepoRelease == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+          body: OpenVSCode Server v${{ env.TAG }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
+          tag: v${{ env.TAG }}
           repo: vscode
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
   docker:
