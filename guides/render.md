@@ -6,7 +6,7 @@ If you want to use Render to host your OpenVSCode server, simply click the butto
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://dashboard.render.com/login?next=/iac/new?repo=https://github.com/render-examples/gitpod-vscode-example)
 
-After that, simply create a name for the service group (could be `OpenVSCode Server`, for example), and click <kbd>Apply</kbd>.
+After that, create a name for the service group (could be `OpenVSCode Server`, for example), and click <kbd>Apply</kbd>.
 
 After Render does its magic, we will see our server listed in the <kbd>Services</kbd> section of the Dashboard. In there, we can see the URL of our server, from which we can access it.
 
