@@ -1,4 +1,4 @@
-# Deploying Visual Studio Code Server to Digital Ocean
+# Deploying an OpenVSCode Server to Digital Ocean
 
 ## Creating the Droplet
 
@@ -19,9 +19,9 @@ ssh root@DROPLET_IP
 
 - Now, type in the password you chose during the configuration and we're in!
 
-### Downloading Visual Studio Code Server
+### Downloading OpenVSCode Server
 
-Downloading Visual Studio Code Server is as easy as pie. We can download it by executing the following commands:
+Downloading OpenVSCode Server is as easy as pie. We can download it by executing the following commands:
 
 ```
 wget https://github.com/gitpod-io/vscode-releases/releases/download/v1.59.0/code-web-server-v1.59.0-linux-x64.tar.gz -O code-server.tar.gz
@@ -46,7 +46,7 @@ We're all set! You can now access your IDE at `http://<your-droplet-ip>:3000`.
 
 ## Further steps
 
-### Running Visual Studio Code Server on startup
+### Running OpenVSCode Server on startup
 
 If you want to run the server on boot, you can add this to your Crontab file (`crontab -e`):
 
