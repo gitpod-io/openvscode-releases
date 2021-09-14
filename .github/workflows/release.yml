@@ -106,21 +106,23 @@ jobs:
         with:
           path: outputs/
       - run: ls -R
-      - run: echo "TAG=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+      - run: echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
       - name: Create test release
         if: github.event.inputs.uploadGHReleases == 'true' && github.event.inputs.vscodeRepoRelease != 'true'
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          body: OpenVSCode Server v${{ env.TAG }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
-          tag: v${{ env.TAG }}
+          body: OpenVSCode Server v${{ env.VERSION }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
+          commit: ${{ github.event.inputs.commit }}
+          tag: openvscode-server-v${{ env.VERSION }}
       - name: Create release
         if: github.event.inputs.uploadGHReleases == 'true' && github.event.inputs.vscodeRepoRelease == 'true'
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          body: OpenVSCode Server v${{ env.TAG }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
-          tag: v${{ env.TAG }}
+          body: OpenVSCode Server v${{ env.VERSION }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
+          commit: ${{ github.event.inputs.commit }}
+          tag: openvscode-server-v${{ env.VERSION }}
           repo: vscode
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
   docker:
@@ -142,7 +144,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            gitpod/vscode
+            gitpod/openvscode-server
           tags: |
             type=semver,pattern={{version}},value=v${{ env.VERSION }}
       - name: Login to DockerHub
