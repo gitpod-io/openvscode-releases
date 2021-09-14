@@ -5,10 +5,10 @@ RUN apt install -y git wget
 ARG SERVER_VERSION=v1.59.0
 WORKDIR /home/
 # Downloading the latest VSC Server release
-RUN wget https://github.com/gitpod-io/vscode-releases/releases/download/${SERVER_VERSION}/code-web-server-${SERVER_VERSION}-linux-x64.tar.gz
+RUN wget https://github.com/gitpod-io/vscode-releases/releases/download/${SERVER_VERSION}/openvscode-server-${SERVER_VERSION}-linux-x64.tar.gz
 
 # Extracting the release archive
-RUN tar -xzf code-web-server-${SERVER_VERSION}-linux-x64.tar.gz
+RUN tar -xzf openvscode-server-${SERVER_VERSION}-linux-x64.tar.gz
 
 # Creating the user and usergroup
 RUN adduser vscode-server && \
@@ -19,7 +19,7 @@ RUN chmod g+rw /home && \
     mkdir -p /home/workspace && \
     chown -R vscode-server:vscode-server /home/workspace && \
     chown -R vscode-server:vscode-server /home/vscode && \
-    chown -R vscode-server:vscode-server /home/code-web-server-${SERVER_VERSION}-linux-x64;
+    chown -R vscode-server:vscode-server /home/openvscode-server-${SERVER_VERSION}-linux-x64;
 
 USER vscode-server
 
@@ -33,4 +33,4 @@ ENV VISUAL=code
 ENV GIT_EDITOR="code --wait"
 
 ENV SERVER_VERSION=${SERVER_VERSION}
-ENTRYPOINT /home/code-web-server-$SERVER_VERSION-linux-x64/server.sh
+ENTRYPOINT /home/openvscode-server-$SERVER_VERSION-linux-x64/server.sh
