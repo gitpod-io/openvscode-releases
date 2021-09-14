@@ -1,4 +1,4 @@
-name: Publish OpenVSCode Server
+name: Public to GitHub releases
 on:
   workflow_dispatch:
     inputs:
@@ -145,5 +145,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          build-args: SERVER_VERSION=v${{ env.VERSION }}
+          build-args: SERVER_VERSION=${{ env.VERSION }}
           tags: ${{ steps.meta.outputs.tags }}
