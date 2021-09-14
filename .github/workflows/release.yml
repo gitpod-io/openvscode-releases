@@ -9,10 +9,6 @@ on:
         description: 'Create GitHub Release'
         required: false
         default: "false"
-      vscodeRepoRelease:
-        description: 'Upload to gitpod-io/vscode'
-        required: false
-        default: "false"
 
 jobs:
   build:
@@ -107,20 +103,12 @@ jobs:
           path: outputs/
       - run: ls -R
       - run: echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
-      - name: Create test release
-        if: github.event.inputs.uploadGHReleases == 'true' && github.event.inputs.vscodeRepoRelease != 'true'
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          body: OpenVSCode Server v${{ env.VERSION }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
-          commit: ${{ github.event.inputs.commit }}
-          tag: openvscode-server-v${{ env.VERSION }}
       - name: Create release
-        if: github.event.inputs.uploadGHReleases == 'true' && github.event.inputs.vscodeRepoRelease == 'true'
+        if: github.event.inputs.uploadGHReleases == 'true'
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          body: OpenVSCode Server v${{ env.VERSION }} ([${{ github.event.inputs.commit }}](https://github.com/gitpod-io/vscode/commit/${{ github.event.inputs.commit }}))
+          body: OpenVSCode Server v${{ env.VERSION }}
           commit: ${{ github.event.inputs.commit }}
           tag: openvscode-server-v${{ env.VERSION }}
           repo: vscode
