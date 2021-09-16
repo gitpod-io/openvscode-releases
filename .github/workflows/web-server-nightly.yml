@@ -1,0 +1,40 @@
+name: Openvscode server nightly
+on: workflow_dispatch
+  #schedule:
+  #  - cron: '0 18 * * 1-5'
+
+jobs:
+  sync:
+    name: Syncing web-server branch
+    runs-on: ubuntu-latest
+    # timeout-minutes: 30
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'gitpod-io/openvscode-server'
+          ref: 'next'
+      
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      
+      - name: Sync and run smoke tests
+        id: syncAndRunSmokeTests
+        continue-on-error: true
+        run: ./scripts/sync-with-upstream.sh
+
+      - name: Send mail
+        if: steps.syncAndRunSmokeTests.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          #username: ${{secrets.MAIL_USERNAME}}
+          #password: ${{secrets.MAIL_PASSWORD}}
+          subject: Openvscode server nightly workflow failed
+          to: jeanpierre@gitpod.io
+          # Required sender full name (address can be skipped):
+          from: Github Action Runner
+          body: "Openvscode server nightly workflow #${{ github.run_number }} failed!"
