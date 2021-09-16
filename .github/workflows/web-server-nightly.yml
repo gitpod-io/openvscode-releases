@@ -31,10 +31,9 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          #username: ${{secrets.MAIL_USERNAME}}
-          #password: ${{secrets.MAIL_PASSWORD}}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
           subject: Openvscode server nightly workflow failed
-          to: jeanpierre@gitpod.io
-          # Required sender full name (address can be skipped):
+          to: jeanpierre@gitpod.io #,anton@gitpod.io
           from: Github Action Runner
           body: "Openvscode server nightly workflow #${{ github.run_number }} failed!"
