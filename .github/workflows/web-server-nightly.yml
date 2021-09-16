@@ -9,12 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     # timeout-minutes: 30
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v2
         with:
           repository: 'gitpod-io/openvscode-server'
           ref: 'next'
+          fetch-depth: 0
       
       - uses: actions/setup-node@v2
         with:
@@ -23,10 +24,13 @@ jobs:
       - name: Sync and run smoke tests
         id: syncAndRunSmokeTests
         continue-on-error: true
-        run: ./scripts/sync-with-upstream.sh
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          ./scripts/sync-with-upstream.sh
 
       - name: Send mail
-        if: steps.syncAndRunSmokeTests.outcome == 'failure'
+        if: ${{ steps.syncAndRunSmokeTests.outcome == 'failure' }} 
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
