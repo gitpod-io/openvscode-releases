@@ -23,14 +23,17 @@ jobs:
       
       - name: Sync and run smoke tests
         id: syncAndRunSmokeTests
-        continue-on-error: true
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           ./scripts/sync-with-upstream.sh
 
+      - name: Push validated changes to next branch
+        run: |
+          git push origin next:next2 --force
+
       - name: Send mail
-        if: ${{ steps.syncAndRunSmokeTests.outcome == 'failure' }} 
+        if: ${{ failure() && steps.syncAndRunSmokeTests.outcome == 'failure' }} 
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
