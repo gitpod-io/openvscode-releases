@@ -30,19 +30,51 @@ jobs:
         with:
           node-version: 14
       
-      - name: Sync and run smoke tests
-        id: syncAndRunSmokeTests
+      - name: Compute node modules cache key
+        id: nodeModulesCacheKey
+        run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)"
+      - name: Cache node modules
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-cacheNodeModules14-
+      - name: Get yarn cache directory path
+        id: yarnCacheDirPath
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Cache yarn directory
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-yarnCacheDir-
+      - name: Execute yarn
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+        run: yarn --frozen-lockfile --network-timeout 180000
+
+      - name: Sync with upstream (rebase)
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          ./scripts/sync-with-upstream.sh
+          ./scripts/sync-with-upstream.sh upstream/main next true
 
-      - name: Push validated changes to next branch
+      - name: Compile
         run: |
-          git push origin next:next2 --force
+          yarn server:init
+
+      - name: Run smoke tests
+        id: runSmokeTests
+        run: |
+          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
 
       - name: Send mail
-        if: ${{ failure() && steps.syncAndRunSmokeTests.outcome == 'failure' }}
+        if: ${{ failure() && steps.runSmokeTests.outcome == 'failure' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -55,7 +87,7 @@ jobs:
           body: "Openvscode server nightly workflow #${{ github.run_number }} failed!"
 
       - name: Publish logs files
-        if: ${{ failure() && steps.syncAndRunSmokeTests.outcome == 'failure' }}
+        if: ${{ failure() && steps.runSmokeTests.outcome == 'failure' }}
         uses: actions/upload-artifact@v2
         with:
           name: logs-linux-web-server
