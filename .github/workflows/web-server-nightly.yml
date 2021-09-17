@@ -6,8 +6,8 @@ on:
         description: 'New parent commit'
         required: true
         default: 'upstream/main'
-  #schedule:
-  #  - cron: '0 18 * * 1-5'
+  schedule:
+   - cron: '0 18 * * 1-5'
 
 jobs:
   sync:
@@ -74,23 +74,15 @@ jobs:
         run: |
           yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
 
-      - name: Run smoke tests
-        id: runSmokeTests
+      - name: Push changes to next branch
         run: |
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+          git checkout next
+          git push origin next --force
 
-      - name: Send mail
-        if: ${{ failure() && steps.runSmokeTests.outcome == 'failure' }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: Openvscode server nightly workflow failed
-          to: jeanpierre@gitpod.io #,anton@gitpod.io
-          from: Github Action Runner
-          body: "Openvscode server nightly workflow #${{ github.run_number }} failed!"
+      # - name: Run smoke tests
+      #   id: runSmokeTests
+      #   run: |
+      #     yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
 
       - name: Publish logs files
         if: ${{ failure() && steps.runSmokeTests.outcome == 'failure' }}
