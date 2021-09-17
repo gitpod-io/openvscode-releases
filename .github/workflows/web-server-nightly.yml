@@ -1,16 +1,16 @@
-name: Openvscode server nightly
+name: Openvscode server and gp-code server nightly
 on: 
   workflow_dispatch:
     inputs:
       commit:
-        description: 'New parent commit'
+        description: 'New web-server parent commit'
         required: true
         default: 'upstream/main'
-  schedule:
-   - cron: '0 18 * * 1-5'
+  # schedule:
+  #  - cron: '0 18 * * 1-5'
 
 jobs:
-  sync:
+  sync-web-server:
     name: Syncing web-server branch
     runs-on: ubuntu-latest
     # timeout-minutes: 30
@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          ./scripts/sync-with-upstream.sh ${{ github.event.inputs.commit }} next true
+          ./scripts/sync-with-upstream.sh ${{ github.event.inputs.commit }} next "code web server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
@@ -90,3 +90,73 @@ jobs:
         with:
           name: logs-linux-web-server
           path: .build/logs
+  
+  sync-gp-code-server:
+    name: Syncing web-server branch
+    runs-on: ubuntu-latest
+    needs: sync-web-server
+    # timeout-minutes: 30
+    env:
+      GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'gitpod-io/openvscode-server'
+          ref: 'gp-code-next'
+          fetch-depth: 0
+      
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbfile-dev pkg-config libsecret-1-dev libxss1 dbus xvfb libgtk-3-0 libgbm1
+          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
+          sudo chmod +x /etc/init.d/xvfb
+          sudo update-rc.d xvfb defaults
+          sudo service xvfb start
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Sync with web-server (rebase)
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          ./scripts/sync-with-upstream.sh next gp-code-next "gitpod server initial commit" true
+
+      - name: Compute node modules cache key
+        id: nodeModulesCacheKey
+        run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)"
+      - name: Cache node modules
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-cacheNodeModules14-
+      - name: Get yarn cache directory path
+        id: yarnCacheDirPath
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Cache yarn directory
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-yarnCacheDir-
+      - name: Execute yarn
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+        run: yarn --frozen-lockfile --network-timeout 180000
+
+      - name: Compile
+        run: |
+          yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
+
+      - name: Push changes to gp-code-next branch
+        run: |
+          git checkout gp-code-next
+          git push origin gp-code-next --force
