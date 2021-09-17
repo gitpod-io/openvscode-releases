@@ -1,11 +1,11 @@
 name: Openvscode server nightly
 on: 
   workflow_dispatch:
-    input:
-        commit:
-          description: 'New parent commit'
-          required: true
-          default: 'upstream/main'
+    inputs:
+      commit:
+        description: 'New parent commit'
+        required: true
+        default: 'upstream/main'
   #schedule:
   #  - cron: '0 18 * * 1-5'
 
