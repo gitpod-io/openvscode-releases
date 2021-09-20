@@ -23,6 +23,11 @@ jobs:
           ref: 'next'
           fetch-depth: 0
       
+      - name: Configure git credentials
+        run: |
+          git config user.name Jean Pierre
+          git config user.email jeanpierre@gitpod.io
+      
       - name: Setup Build Environment
         run: |
           sudo apt-get update
@@ -38,8 +43,6 @@ jobs:
 
       - name: Sync with upstream (rebase)
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           ./scripts/sync-with-upstream.sh ${{ github.event.inputs.commit }} next "code web server initial commit" true
 
       - name: Compute node modules cache key
@@ -104,6 +107,11 @@ jobs:
           ref: 'gp-code-next'
           fetch-depth: 0
       
+      - name: Configure git credentials
+        run: |
+          git config user.name Jean Pierre
+          git config user.email jeanpierre@gitpod.io
+      
       - name: Setup Build Environment
         run: |
           sudo apt-get update
@@ -119,8 +127,6 @@ jobs:
 
       - name: Sync with web-server (rebase)
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           ./scripts/sync-with-upstream.sh next gp-code-next "gitpod server initial commit" true
 
       - name: Compute node modules cache key
