@@ -1,9 +1,9 @@
-name: Openvscode server and gp-code server nightly
+name: Nightly
 on: 
   workflow_dispatch:
     inputs:
       commit:
-        description: 'New web-server parent commit'
+        description: 'Commit'
         required: true
         default: 'upstream/main'
   # schedule:
