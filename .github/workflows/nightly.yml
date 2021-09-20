@@ -76,8 +76,7 @@ jobs:
 
       - name: Push changes to next branch
         run: |
-          git checkout next
-          git push origin next --force
+          git push origin next --force-with-lease
 
       # - name: Run smoke tests
       #   id: runSmokeTests
@@ -158,5 +157,4 @@ jobs:
 
       - name: Push changes to gp-code-next branch
         run: |
-          git checkout gp-code-next
-          git push origin gp-code-next --force
+          git push origin gp-code-next --force-with-lease
