@@ -26,7 +26,7 @@ jobs:
         # support only ubuntu for now
         os: [ubuntu-18.04]
     runs-on: ${{ matrix.os }}
-    name: Build (${{ env.QUALITY }}) on ${{ matrix.os }}      
+    name: Build on ${{ matrix.os }}      
     steps:
       - name: Check out the vscode repository
         run: |
