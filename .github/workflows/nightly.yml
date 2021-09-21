@@ -76,10 +76,6 @@ jobs:
         run: |
           yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
 
-      - name: Push changes to next branch
-        run: |
-          git push origin next --force-with-lease
-
       - name: Run integration tests
         id: runIntegrationTests
         run: |
@@ -89,6 +85,10 @@ jobs:
         id: runSmokeTests
         run: |
           yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+
+      - name: Push changes to next branch
+        run: |
+          git push origin next --force-with-lease
 
       - name: Publish logs files
         if: ${{ failure() && (steps.runSmokeTests.outcome == 'failure' || steps.runIntegrationTests.outcome == 'failure') }}
