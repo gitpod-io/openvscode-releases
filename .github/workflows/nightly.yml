@@ -80,13 +80,18 @@ jobs:
         run: |
           git push origin next --force-with-lease
 
-      # - name: Run smoke tests
-      #   id: runSmokeTests
-      #   run: |
-      #     yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+      - name: Run integration tests
+        id: runIntegrationTests
+        run: |
+          ./resources/server/test/test-web-integration.sh --browser chromium
+
+      - name: Run smoke tests
+        id: runSmokeTests
+        run: |
+          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
 
       - name: Publish logs files
-        if: ${{ failure() && steps.runSmokeTests.outcome == 'failure' }}
+        if: ${{ failure() && (steps.runSmokeTests.outcome == 'failure' || steps.runIntegrationTests.outcome == 'failure') }}
         uses: actions/upload-artifact@v2
         with:
           name: logs-linux-web-server
@@ -97,6 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: sync-web-server
     # timeout-minutes: 30
+    if: ${{ false }}  # disable for now
     steps:
       - uses: actions/checkout@v2
         with:
