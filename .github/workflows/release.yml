@@ -5,10 +5,18 @@ on:
       commit:
         description: 'Commit to release'
         required: true
+        default: "next"
+      quality:
+        description: 'Quality: nightly or stable'
+        required: true
+        default: nightly
       uploadGHReleases:
         description: 'Create GitHub Release'
         required: false
         default: "false"
+
+env:
+  QUALITY: ${{ github.event.inputs.quality || nightly }}
 
 jobs:
   build:
@@ -18,24 +26,26 @@ jobs:
         # support only ubuntu for now
         os: [ubuntu-18.04]
     runs-on: ${{ matrix.os }}
-    name: Build on ${{ matrix.os }}      
+    name: Build (${{ env.QUALITY }}) on ${{ matrix.os }}      
     steps:
       - name: Check out the vscode repository
         run: |
-          git clone --filter=blob:none --no-checkout https://github.com/gitpod-io/vscode
-          cd vscode
+          git clone --filter=blob:none --no-checkout https://github.com/gitpod-io/openvscode-server
+          cd openvscode-server
           git checkout ${{ github.event.inputs.commit }}
+      
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
+      
       - name: Set cache key (Linux & macOS)
         if: runner.os != 'Windows'
-        working-directory: vscode/
+        working-directory: openvscode-server/
         run: |
           echo "CACHE_KEY=${{ github.event.inputs.commit }}" >> $GITHUB_ENV
       - name: Set environment variables (Windows)
         if: runner.os == 'Windows'
-        working-directory: vscode/
+        working-directory: openvscode-server/
         run: |
           chcp 65001
           echo ("CACHE_KEY=${{ github.event.inputs.commit }}") >> $env:GITHUB_ENV
@@ -47,14 +57,17 @@ jobs:
           key: ${{ runner.os }}-${{ env.CACHE_KEY }}
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        working-directory: ./vscode
+        working-directory: ./openvscode-server
         run: yarn --frozen-lockfile --network-timeout 180000
+      
       - name: Prepare for distribution
         if: steps.cache.outputs.cache-hit != 'true'
-        working-directory: ./vscode
+        working-directory: ./openvscode-server
         run: yarn gulp server-min
+      
       - name: Move build output
         run: cp -r server-pkg/ bundle/
+      
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
         id: archive
@@ -62,23 +75,31 @@ jobs:
           cond: ${{ runner.os == 'Windows' }}
           if_true: 'zip'
           if_false: 'tar.gz'
+      
       - name: Set environment variables (Linux & macOS)
         if: runner.os != 'Windows'
         run: |
           echo "EXTENSION=${{ steps.archive.outputs.value }}" >> $GITHUB_ENV
-          echo "VERSION=$(node -p -e "require('./vscode/package.json').version")" >> $GITHUB_ENV
-      - name: Set environment variables (Windows)
+          echo "VERSION=$(node -p -e "require('./openvscode-server/package.json').version")" >> $GITHUB_ENV
+      
+      - name: Set archive file name (Windows)
         if: runner.os == 'Windows'
         run: |
           chcp 65001
-          echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64") >> $env:GITHUB_ENV
-          echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./vscode/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
+      
       - name: Set archive file name
         run: |
-          echo "ARCHIVE_NAME=openvscode-server-v${{ env.VERSION }}-$(echo ${{ runner.os }} | tr  '[:upper:]' '[:lower:]')-x64" >> $GITHUB_ENV
-          echo "ARCHIVE_FULL_NAME=openvscode-server-v${{ env.VERSION }}-$(echo ${{ runner.os }} | tr  '[:upper:]' '[:lower:]')-x64.${{ env.EXTENSION }}" >> $GITHUB_ENV
+          os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
+          quality_name=$([ "$QUALITY" == "nightly" ] && echo "-nightly" || echo "")
+          name="openvscode-server${quality_name}-v${VERSION}-${os_name}-x64"
+          echo "ARCHIVE_NAME=$name-x64" >> $GITHUB_ENV
+          echo "ARCHIVE_FULL_NAME=$name-x64.$EXTENSION" >> $GITHUB_ENV
+      
       - name: Rename the bundle file
         run: mv bundle/ ${{ env.ARCHIVE_NAME }}/
+      
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
         run: |
@@ -87,11 +108,13 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           Compress-Archive -Path ${{ env.ARCHIVE_NAME }}\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_FULL_NAME }}
+      
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
           name: ${{ runner.os }}-x64
           path: ${{ env.ARCHIVE_FULL_NAME }}
+  
   upload:
     needs: build 
     runs-on: ubuntu-latest
@@ -101,8 +124,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: outputs/
-      - run: ls -R
+      
       - run: echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+      
       - name: Create release
         if: github.event.inputs.uploadGHReleases == 'true'
         uses: ncipollo/release-action@v1
@@ -113,6 +137,7 @@ jobs:
           tag: openvscode-server-v${{ env.VERSION }}
           repo: vscode
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+  
   docker:
     needs: upload
     runs-on: ubuntu-latest
