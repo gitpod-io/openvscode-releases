@@ -76,6 +76,12 @@ jobs:
         run: |
           yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
 
+      - name: Compile test suites
+        run: |
+          set -e
+          yarn --cwd test/smoke compile
+          yarn --cwd test/integration/browser compile
+
       - name: Run integration tests
         id: runIntegrationTests
         run: |
