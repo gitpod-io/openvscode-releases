@@ -16,7 +16,7 @@ on:
         default: "false"
 
 env:
-  QUALITY: ${{ github.event.inputs.quality || nightly }}
+  QUALITY: ${{ github.event.inputs.quality || 'nightly' }}
 
 jobs:
   build:
