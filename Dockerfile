@@ -7,7 +7,7 @@ ARG RELEASE_TAG
 WORKDIR /home/
 
 # Downloading the latest VSC Server release
-RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-x64.tar.gz
+RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/openvscode-server-v${RELEASE_TAG}/openvscode-server-v${RELEASE_TAG}-linux-x64.tar.gz
 
 # Extracting the release archive
 RUN tar -xzf ${RELEASE_TAG}-linux-x64.tar.gz
