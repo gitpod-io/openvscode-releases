@@ -34,5 +34,4 @@ ENV EDITOR=code
 ENV VISUAL=code
 ENV GIT_EDITOR="code --wait"
 
-ENV SERVER_VERSION=${SERVER_VERSION}
 ENTRYPOINT /home/${RELEASE_TAG}-linux-x64/server.sh
