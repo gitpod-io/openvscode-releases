@@ -108,7 +108,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: sync-web-server
     # timeout-minutes: 30
-    if: ${{ false }}  # disable for now
     steps:
       - uses: actions/checkout@v2
         with:
