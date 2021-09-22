@@ -94,11 +94,12 @@ jobs:
           os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
           quality_name=$([ "$QUALITY" == "nightly" ] && echo "-nightly" || echo "")
           name="openvscode-server${quality_name}-v${VERSION}-${os_name}-x64"
-          echo "ARCHIVE_NAME=$name-x64" >> $GITHUB_ENV
-          echo "ARCHIVE_FULL_NAME=$name-x64.$EXTENSION" >> $GITHUB_ENV
+          echo "ARCHIVE_NAME=$name" >> $GITHUB_ENV
+          echo "ARCHIVE_FULL_NAME=$name.$EXTENSION" >> $GITHUB_ENV
       
       - name: Rename the bundle file
-        run: mv bundle/ ${{ env.ARCHIVE_NAME }}/
+        run: |
+          mv bundle/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
         if: runner.os  != 'Windows'
@@ -119,29 +120,56 @@ jobs:
     needs: build 
     runs-on: ubuntu-latest
     name: Create the release
+    if: |
+      github.event.inputs.uploadGHReleases == 'true' &&
+      (env.QUALITY == 'stable' || env.QUALITY == 'nightly')
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           path: outputs/
       
-      - run: echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
+      - run: |
+          echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
       
-      - name: Create release
-        if: github.event.inputs.uploadGHReleases == 'true'
+      - name: Create stable release
+        if: ${{ env.QUALITY == 'stable' }}
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
           body: OpenVSCode Server v${{ env.VERSION }}
           commit: ${{ github.event.inputs.commit }}
           tag: openvscode-server-v${{ env.VERSION }}
-          repo: vscode
+          repo: openvscode-server
+          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+
+      - name: Delete previous nightly release
+        if: ${{ env.QUALITY == 'nightly' }}
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          repo: gitpod-io/openvscode-server
+          keep_latest: 0
+          delete_tag_pattern: openvscode-server-nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      - name: Create nightly release
+        if: ${{ env.QUALITY == 'nightly' }}
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+          body: OpenVSCode Server Nightly v${{ env.VERSION }}
+          commit: ${{ github.event.inputs.commit }}
+          tag: openvscode-server-nightly-v${{ env.VERSION }}
+          repo: openvscode-server
+          prerelease: true
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
   
   docker:
     needs: upload
     runs-on: ubuntu-latest
     name: Build and publish Docker image
+    if: ${{ false }}
+    # if: ${{ github.event.inputs.uploadGHReleases == 'true' }}
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
