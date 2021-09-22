@@ -130,37 +130,37 @@ jobs:
       - run: |
           echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
       
-      - name: Create stable release
-        if: env.QUALITY == 'stable'
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          body: OpenVSCode Server v${{ env.VERSION }}
-          commit: ${{ github.event.inputs.commit }}
-          tag: openvscode-server-v${{ env.VERSION }}
-          repo: openvscode-server
-          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      # - name: Create stable release
+      #   if: env.QUALITY == 'stable'
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+      #     body: OpenVSCode Server v${{ env.VERSION }}
+      #     commit: ${{ github.event.inputs.commit }}
+      #     tag: openvscode-server-v${{ env.VERSION }}
+      #     repo: openvscode-server
+      #     token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
-      - name: Delete previous nightly release
-        if: env.QUALITY == 'nightly'
-        uses: dev-drprasad/delete-older-releases@v0.2.0
-        with:
-          repo: gitpod-io/openvscode-server
-          keep_latest: 0
-          delete_tag_pattern: openvscode-server-nightly
-        env:
-          GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-      - name: Create nightly release
-        if: env.QUALITY == 'nightly'
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
-          body: OpenVSCode Server Nightly v${{ env.VERSION }}
-          commit: ${{ github.event.inputs.commit }}
-          tag: openvscode-server-nightly-v${{ env.VERSION }}
-          repo: openvscode-server
-          prerelease: true
-          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      # - name: Delete previous nightly release
+      #   if: env.QUALITY == 'nightly'
+      #   uses: dev-drprasad/delete-older-releases@v0.2.0
+      #   with:
+      #     repo: gitpod-io/openvscode-server
+      #     keep_latest: 0
+      #     delete_tag_pattern: openvscode-server-nightly
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      # - name: Create nightly release
+      #   if: env.QUALITY == 'nightly'
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+      #     body: OpenVSCode Server Nightly v${{ env.VERSION }}
+      #     commit: ${{ github.event.inputs.commit }}
+      #     tag: openvscode-server-nightly-v${{ env.VERSION }}
+      #     repo: openvscode-server
+      #     prerelease: true
+      #     token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
   
   docker:
     needs: upload
