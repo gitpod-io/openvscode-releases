@@ -120,8 +120,7 @@ jobs:
     needs: build 
     runs-on: ubuntu-latest
     name: Create the release
-    # if: github.event.inputs.uploadGHReleases == 'true'
-    if: ${{ false }}
+    if: github.event.inputs.uploadGHReleases == 'true'
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
@@ -167,7 +166,6 @@ jobs:
     needs: upload
     runs-on: ubuntu-latest
     name: Build and publish Docker image
-    if: ${{ github.event.inputs.uploadGHReleases == 'true' }}
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
