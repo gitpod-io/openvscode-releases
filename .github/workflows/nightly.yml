@@ -136,7 +136,7 @@ jobs:
 
       - name: Sync with next (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh next gp-code-next "gitpod server initial commit" true
+          ./scripts/sync-with-upstream.sh origin/next gp-code-next "gitpod server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
