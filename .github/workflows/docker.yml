@@ -2,8 +2,8 @@ name: Publish to DockerHub
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'OpenVSCode Server Version'
+      release_tag:
+        description: 'OpenVSCode Server stable release tag'
         required: true
 
 jobs:
@@ -13,6 +13,7 @@ jobs:
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
+      
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
@@ -21,15 +22,17 @@ jobs:
             gitpod/openvscode-server
           tags: |
             type=semver,pattern={{version}},value=v${{ github.event.inputs.version }}
+      
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
-          build-args: SERVER_VERSION=${{ github.event.inputs.version }}
+          build-args: RELEASE_TAG=${{ github.event.inputs.release_tag }}
           tags: ${{ steps.meta.outputs.tags }}
