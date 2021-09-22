@@ -102,7 +102,7 @@ jobs:
           mv bundle/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
-        if: runner.os  != 'Windows'
+        if: runner.os != 'Windows'
         run: |
           sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/ > /dev/null
       - name: Bundle zip
@@ -120,9 +120,7 @@ jobs:
     needs: build 
     runs-on: ubuntu-latest
     name: Create the release
-    if: |
-      github.event.inputs.uploadGHReleases == 'true' &&
-      (env.QUALITY == 'stable' || env.QUALITY == 'nightly')
+    if: github.event.inputs.uploadGHReleases == 'true'
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
@@ -133,7 +131,7 @@ jobs:
           echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
       
       - name: Create stable release
-        if: ${{ env.QUALITY == 'stable' }}
+        if: env.QUALITY == 'stable'
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
@@ -144,7 +142,7 @@ jobs:
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
       - name: Delete previous nightly release
-        if: ${{ env.QUALITY == 'nightly' }}
+        if: env.QUALITY == 'nightly'
         uses: dev-drprasad/delete-older-releases@v0.2.0
         with:
           repo: gitpod-io/openvscode-server
@@ -153,7 +151,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
       - name: Create nightly release
-        if: ${{ env.QUALITY == 'nightly' }}
+        if: env.QUALITY == 'nightly'
         uses: ncipollo/release-action@v1
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
