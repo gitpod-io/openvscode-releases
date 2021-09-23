@@ -1,24 +1,19 @@
-name: Nightly
+name: Gitpod Nightly
 on:
-  workflow_dispatch:
-    inputs:
-      commit:
-        description: "Commit"
-        required: true
-        default: "upstream/main"
-  schedule:
-    - cron: "0 18 * * 1-5"
+  workflow_run:
+    workflows: ["Nightly"]
+    types: [completed]
 
 jobs:
-  sync-main:
-    name: Syncing main branch
+  sync-gp-code:
+    name: Syncing gp-code-next branch
     runs-on: ubuntu-latest
     # timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
         with:
           repository: "gitpod-io/openvscode-server"
-          ref: "main"
+          ref: "gp-code-next"
           fetch-depth: 0
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
@@ -40,9 +35,9 @@ jobs:
         with:
           node-version: 14
 
-      - name: Sync with upstream (rebase)
+      - name: Sync with next (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh ${{ github.event.inputs.commit }} main "code web server initial commit" true
+          ./scripts/sync-with-upstream.sh origin/next gp-code-next "gitpod server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
@@ -76,29 +71,6 @@ jobs:
         run: |
           yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
 
-      - name: Compile test suites
+      - name: Push changes to gp-code-next branch
         run: |
-          set -e
-          yarn --cwd test/smoke compile
-          yarn --cwd test/integration/browser compile
-
-      - name: Run integration tests
-        id: runIntegrationTests
-        run: |
-          ./resources/server/test/test-web-integration.sh --browser chromium
-
-      - name: Run smoke tests
-        id: runSmokeTests
-        run: |
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
-
-      - name: Push changes to main branch
-        run: |
-          git push origin main --force-with-lease
-
-      - name: Publish logs files
-        if: ${{ failure() && (steps.runSmokeTests.outcome == 'failure' || steps.runIntegrationTests.outcome == 'failure') }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: logs-linux-main
-          path: .build/logs
+          git push origin gp-code-next --force-with-lease

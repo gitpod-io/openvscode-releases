@@ -1,15 +1,14 @@
-name: Public to GitHub releases
+name: Publish to GitHub releases
 on:
   workflow_dispatch:
     inputs:
       commit:
         description: 'Commit to release'
         required: true
-        default: "next"
       quality:
         description: 'Quality: nightly or stable'
         required: true
-        default: nightly
+        default: stable
       uploadRelease:
         description: 'Create GitHub and DockerHub Release'
         required: false
@@ -20,7 +19,7 @@ on:
 
 env:
   QUALITY: ${{ github.event.inputs.quality || 'nightly' }}
-  RELEASE_COMMIT: ${{ github.event.inputs.commit || 'next' }}
+  RELEASE_COMMIT: ${{ github.event.inputs.commit || 'main' }}
 
 jobs:
   build:
