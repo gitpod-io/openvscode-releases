@@ -10,13 +10,17 @@ on:
         description: 'Quality: nightly or stable'
         required: true
         default: nightly
-      uploadGHReleases:
-        description: 'Create GitHub Release'
+      uploadRelease:
+        description: 'Create GitHub and DockerHub Release'
         required: false
         default: "false"
+  workflow_run:
+    workflows: ["Nightly"]
+    types: [completed]
 
 env:
   QUALITY: ${{ github.event.inputs.quality || 'nightly' }}
+  RELEASE_COMMIT: ${{ github.event.inputs.commit || 'next' }}
 
 jobs:
   build:
@@ -27,12 +31,13 @@ jobs:
         os: [ubuntu-18.04]
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }}      
+    if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Check out the vscode repository
         run: |
           git clone --filter=blob:none --no-checkout https://github.com/gitpod-io/openvscode-server
           cd openvscode-server
-          git checkout ${{ github.event.inputs.commit }}
+          git checkout ${{ env.RELEASE_COMMIT }}
       
       - uses: actions/setup-node@v2
         with:
@@ -42,13 +47,13 @@ jobs:
         if: runner.os != 'Windows'
         working-directory: openvscode-server/
         run: |
-          echo "CACHE_KEY=${{ github.event.inputs.commit }}" >> $GITHUB_ENV
+          echo "CACHE_KEY=${{ env.RELEASE_COMMIT }}" >> $GITHUB_ENV
       - name: Set environment variables (Windows)
         if: runner.os == 'Windows'
         working-directory: openvscode-server/
         run: |
           chcp 65001
-          echo ("CACHE_KEY=${{ github.event.inputs.commit }}") >> $env:GITHUB_ENV
+          echo ("CACHE_KEY=${{ env.RELEASE_COMMIT }}") >> $env:GITHUB_ENV
       - uses: actions/cache@v2
         id: cache
         with:
@@ -120,7 +125,7 @@ jobs:
     needs: build 
     runs-on: ubuntu-latest
     name: Create the release
-    if: github.event.inputs.uploadGHReleases == 'true'
+    if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
@@ -136,7 +141,7 @@ jobs:
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
           body: OpenVSCode Server v${{ env.VERSION }}
-          commit: ${{ github.event.inputs.commit }}
+          commit: ${{ env.RELEASE_COMMIT }}
           tag: openvscode-server-v${{ env.VERSION }}
           repo: openvscode-server
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
@@ -157,7 +162,7 @@ jobs:
         with:
           artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
           body: OpenVSCode Server Nightly v${{ env.VERSION }}
-          commit: ${{ github.event.inputs.commit }}
+          commit: ${{ env.RELEASE_COMMIT }}
           tag: openvscode-server-nightly-v${{ env.VERSION }}
           repo: openvscode-server
           prerelease: true
