@@ -119,6 +119,13 @@ jobs:
         with:
           name: ${{ runner.os }}-x64
           path: ${{ env.ARCHIVE_FULL_NAME }}
+
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
   
   upload:
     needs: build 
@@ -166,6 +173,13 @@ jobs:
           repo: openvscode-server
           prerelease: true
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
   
   docker:
     needs: upload
@@ -207,3 +221,10 @@ jobs:
           push: true
           build-args: RELEASE_TAG=${{ env.RELEASE_TAG }}
           tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
