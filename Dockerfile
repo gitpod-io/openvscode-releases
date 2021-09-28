@@ -26,12 +26,13 @@ RUN chmod g+rw /home && \
 USER vscode-server
 
 WORKDIR /home/workspace/
-ENV HOME /home/workspace/
 
-EXPOSE 3000
-
+ENV HOME=/home/workspace
 ENV EDITOR=code
 ENV VISUAL=code
 ENV GIT_EDITOR="code --wait"
+ENV OPENVSCODE_SERVER_ROOT=/home/${RELEASE_TAG}-linux-x64
 
-ENTRYPOINT /home/${RELEASE_TAG}-linux-x64/server.sh
+EXPOSE 3000
+
+ENTRYPOINT ${OPENVSCODE_SERVER_ROOT}/server.sh
