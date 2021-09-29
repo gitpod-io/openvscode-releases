@@ -31,13 +31,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }}      
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
-    steps:
-      - name: Check out the vscode repository
-        run: |
-          git clone --filter=blob:none --no-checkout https://github.com/gitpod-io/openvscode-server
-          cd openvscode-server
-          git checkout ${{ env.RELEASE_COMMIT }}
-      
+    steps:  
+      - uses: actions/checkout@v2
+        with:
+          repository: gitpod-io/openvscode-server
+          ref: ${{ env.RELEASE_COMMIT }}
+          path: openvscode-server
+          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
@@ -56,8 +57,7 @@ jobs:
       - uses: actions/cache@v2
         id: cache
         with:
-          path: |
-            server-pkg/
+          path: server-pkg/
           key: ${{ runner.os }}-${{ env.CACHE_KEY }}
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
@@ -69,8 +69,25 @@ jobs:
         working-directory: ./openvscode-server
         run: yarn gulp server-min
       
-      - name: Move build output
-        run: cp -r server-pkg/ bundle/
+      - name: Compile test suites
+        run: |
+          set -e
+          yarn --cwd test/smoke compile
+          yarn --cwd test/integration/browser compile
+
+      - name: Run integration tests
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/server-pkg" \
+          ./resources/server/test/test-web-integration.sh --browser chromium
+
+      - name: Run smoke tests
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/server-pkg" \
+          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
       
       - name: Determine archive filename
         uses: haya14busa/action-cond@v1
@@ -92,7 +109,6 @@ jobs:
           chcp 65001
           echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64") >> $env:GITHUB_ENV
           echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
-      
       - name: Set archive file name
         run: |
           os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
@@ -103,7 +119,7 @@ jobs:
       
       - name: Rename the bundle file
         run: |
-          mv bundle/ ${{ env.ARCHIVE_NAME }}/
+          mv server-pkg/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
         if: runner.os != 'Windows'
@@ -114,18 +130,18 @@ jobs:
         run: |
           Compress-Archive -Path ${{ env.ARCHIVE_NAME }}\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_FULL_NAME }}
       
-      - name: Archive sanity check
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ runner.os }}-x64
-          path: ${{ env.ARCHIVE_FULL_NAME }}
+      # - name: Archive sanity check
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: ${{ runner.os }}-x64
+      #     path: ${{ env.ARCHIVE_FULL_NAME }}
 
-      - name: Slack Notification
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
+      # - name: Slack Notification
+      #   if: always()
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      #     SLACK_COLOR: ${{ job.status }}
   
   upload:
     needs: build 
