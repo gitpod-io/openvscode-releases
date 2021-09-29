@@ -40,6 +40,7 @@ jobs:
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
       - name: Setup Build Environment
+        working-directory: ./openvscode-server
         run: |
           sudo apt-get update
           sudo apt-get install -y libxkbfile-dev pkg-config libsecret-1-dev libxss1 dbus xvfb libgtk-3-0 libgbm1
