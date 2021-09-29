@@ -155,18 +155,18 @@ jobs:
         run: |
           Compress-Archive -Path ${{ env.ARCHIVE_NAME }}\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_FULL_NAME }}
       
-      # - name: Archive sanity check
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: ${{ runner.os }}-x64
-      #     path: ${{ env.ARCHIVE_FULL_NAME }}
+      - name: Archive sanity check
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ runner.os }}-x64
+          path: ${{ env.ARCHIVE_FULL_NAME }}
 
-      # - name: Slack Notification
-      #   if: always()
-      #   uses: rtCamp/action-slack-notify@v2
-      #   env:
-      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      #     SLACK_COLOR: ${{ job.status }}
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
   
   upload:
     needs: build 
