@@ -39,36 +39,59 @@ jobs:
           path: openvscode-server
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbfile-dev pkg-config libsecret-1-dev libxss1 dbus xvfb libgtk-3-0 libgbm1
+          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
+          sudo chmod +x /etc/init.d/xvfb
+          sudo update-rc.d xvfb defaults
+          sudo service xvfb start
+
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: 14
       
-      - name: Set cache key (Linux & macOS)
-        if: runner.os != 'Windows'
-        working-directory: openvscode-server/
-        run: |
-          echo "CACHE_KEY=${{ env.RELEASE_COMMIT }}" >> $GITHUB_ENV
-      - name: Set environment variables (Windows)
-        if: runner.os == 'Windows'
-        working-directory: openvscode-server/
-        run: |
-          chcp 65001
-          echo ("CACHE_KEY=${{ env.RELEASE_COMMIT }}") >> $env:GITHUB_ENV
-      - uses: actions/cache@v2
-        id: cache
-        with:
-          path: server-pkg/
-          key: ${{ runner.os }}-${{ env.CACHE_KEY }}
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Compute node modules cache key
         working-directory: ./openvscode-server
+        id: nodeModulesCacheKey
+        run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)"
+      - name: Cache node modules
+        id: cacheNodeModules
+        uses: actions/cache@v2
+        with:
+          path: "openvscode-server/**/node_modules"
+          key: ${{ runner.os }}-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-cacheNodeModules14-
+      - name: Get yarn cache directory path
+        working-directory: ./openvscode-server
+        id: yarnCacheDirPath
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - name: Cache yarn directory
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-yarnCacheDir-
+      - name: Execute yarn
+        working-directory: ./openvscode-server
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
         run: yarn --frozen-lockfile --network-timeout 180000
       
       - name: Prepare for distribution
-        if: steps.cache.outputs.cache-hit != 'true'
         working-directory: ./openvscode-server
         run: yarn gulp server-min
       
+      - name: Download playwright
+        working-directory: ./openvscode-server
+        run: |
+          yarn playwright-install 
+
       - name: Compile test suites
         working-directory: ./openvscode-server
         run: |
