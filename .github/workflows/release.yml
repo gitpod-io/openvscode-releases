@@ -70,6 +70,7 @@ jobs:
         run: yarn gulp server-min
       
       - name: Compile test suites
+        working-directory: ./openvscode-server
         run: |
           set -e
           yarn --cwd test/smoke compile
