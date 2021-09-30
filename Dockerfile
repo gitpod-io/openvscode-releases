@@ -1,9 +1,14 @@
 FROM ubuntu:18.04
-RUN apt update && \
-    apt install -y git wget && \
-    rm -rf /var/lib/apt/lists/*
 
 ARG RELEASE_TAG
+
+ARG USERNAME=openvscode-server
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN apt update && \
+    apt install -y git wget sudo && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/
 
@@ -13,17 +18,17 @@ RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELE
     rm -f ${RELEASE_TAG}-linux-x64.tar.gz
 
 # Creating the user and usergroup
-RUN adduser vscode-server && \
-    usermod -a -G vscode-server vscode-server
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USERNAME -m $USERNAME \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
 RUN chmod g+rw /home && \
-    mkdir -p /home/vscode && \
     mkdir -p /home/workspace && \
-    chown -R vscode-server:vscode-server /home/workspace && \
-    chown -R vscode-server:vscode-server /home/vscode && \
-    chown -R vscode-server:vscode-server /home/${RELEASE_TAG}-linux-x64;
+    chown -R $USERNAME:$USERNAME /home/workspace && \
+    chown -R $USERNAME:$USERNAME /home/${RELEASE_TAG}-linux-x64;
 
-USER vscode-server
+USER $USERNAME
 
 WORKDIR /home/workspace/
 
