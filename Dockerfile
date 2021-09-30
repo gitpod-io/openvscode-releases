@@ -1,16 +1,16 @@
 FROM ubuntu:18.04
-RUN apt update
-RUN apt install -y git wget
+RUN apt update && \
+    apt install -y git wget && \
+    rm -rf /var/lib/apt/lists/*
 
 ARG RELEASE_TAG
 
 WORKDIR /home/
 
-# Downloading the latest VSC Server release
-RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-x64.tar.gz
-
-# Extracting the release archive
-RUN tar -xzf ${RELEASE_TAG}-linux-x64.tar.gz
+# Downloading the latest VSC Server release and extracting the release archive
+RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-x64.tar.gz && \
+    tar -xzf ${RELEASE_TAG}-linux-x64.tar.gz && \
+    rm -f ${RELEASE_TAG}-linux-x64.tar.gz
 
 # Creating the user and usergroup
 RUN adduser vscode-server && \
