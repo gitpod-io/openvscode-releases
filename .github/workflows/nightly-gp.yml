@@ -6,14 +6,14 @@ on:
 
 jobs:
   sync-gp-code:
-    name: Syncing gp-code-next branch
+    name: Syncing gp-code/main branch
     runs-on: ubuntu-latest
     # timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
         with:
           repository: "gitpod-io/openvscode-server"
-          ref: "gp-code-next"
+          ref: "gp-code/main"
           fetch-depth: 0
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
@@ -37,7 +37,7 @@ jobs:
 
       - name: Sync with next (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh origin/next gp-code-next "gitpod server initial commit" true
+          ./scripts/sync-with-upstream.sh origin/main gp-code/main "gitpod server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
@@ -71,9 +71,9 @@ jobs:
         run: |
           yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
 
-      - name: Push changes to gp-code-next branch
+      - name: Push changes to gp-code/main branch
         run: |
-          git push origin gp-code-next --force-with-lease
+          git push origin gp-code/main --force-with-lease
 
       - name: Slack Notification
         if: always()
