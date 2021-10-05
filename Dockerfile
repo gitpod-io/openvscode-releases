@@ -32,6 +32,8 @@ USER $USERNAME
 
 WORKDIR /home/workspace/
 
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 ENV HOME=/home/workspace
 ENV EDITOR=code
 ENV VISUAL=code
