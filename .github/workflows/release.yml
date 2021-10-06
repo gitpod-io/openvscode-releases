@@ -184,14 +184,16 @@ jobs:
       
       - name: Create stable release
         if: env.QUALITY == 'stable'
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+          repository: gitpod-io/openvscode-server
+          target_commitish: ${{ env.RELEASE_COMMIT }}
           body: OpenVSCode Server v${{ env.VERSION }}
-          commit: ${{ env.RELEASE_COMMIT }}
-          tag: openvscode-server-v${{ env.VERSION }}
-          repo: openvscode-server
+          tag_name: openvscode-server-v${{ env.VERSION }}
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+          files: |
+            outputs/**/*.tar.gz
+            outputs/**/*.zip
 
       - name: Delete previous nightly release
         if: env.QUALITY == 'nightly'
@@ -205,15 +207,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
       - name: Create nightly release
         if: env.QUALITY == 'nightly'
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: 'outputs/**/*.tar.gz,outputs/**/*.zip'
+          repository: gitpod-io/openvscode-server
+          target_commitish: ${{ env.RELEASE_COMMIT }}
           body: OpenVSCode Server Nightly v${{ env.VERSION }}
-          commit: ${{ env.RELEASE_COMMIT }}
-          tag: openvscode-server-nightly-v${{ env.VERSION }}
-          repo: openvscode-server
+          tag_name: openvscode-server-nightly-v${{ env.VERSION }}
           prerelease: true
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+          files: |
+            outputs/**/*.tar.gz
+            outputs/**/*.zip
 
       - name: Slack Notification
         if: always()
