@@ -2,12 +2,15 @@ name: Nightly
 on:
   workflow_dispatch:
     inputs:
-      commit:
-        description: "Commit"
+      parent_commit:
+        description: "Parent commit"
         required: true
         default: "upstream/main"
   schedule:
     - cron: "0 18 * * 1-5"
+
+env:
+  PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
 
 jobs:
   sync-main:
@@ -42,7 +45,7 @@ jobs:
 
       - name: Sync with upstream (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh ${{ github.event.inputs.commit }} main "code web server initial commit" true
+          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} main "code web server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
