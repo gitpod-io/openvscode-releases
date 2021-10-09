@@ -205,6 +205,9 @@ jobs:
           delete_tag_pattern: openvscode-server-nightly
         env:
           GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      - name: Sleep
+        if: env.QUALITY == 'nightly'
+        run: sleep 30s
       - name: Create nightly release
         if: env.QUALITY == 'nightly'
         uses: softprops/action-gh-release@v1
