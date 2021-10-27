@@ -1,8 +1,16 @@
 name: Gitpod Nightly
 on:
-  workflow_run:
-    workflows: ["Nightly"]
-    types: [completed]
+  workflow_dispatch:
+    inputs:
+      parent_commit:
+        description: "Parent commit"
+        required: true
+        default: "upstream/main"
+  # schedule:
+  #   - cron: "0 18 * * 1-5"
+
+env:
+  PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
 
 jobs:
   sync-gp-code:
@@ -37,7 +45,7 @@ jobs:
 
       - name: Sync with next (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh origin/main gp-code/main "gitpod server initial commit" true
+          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} gp-code/main "gitpod server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
