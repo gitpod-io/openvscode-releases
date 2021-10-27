@@ -86,7 +86,7 @@ jobs:
       
       - name: Prepare for distribution
         working-directory: ./openvscode-server
-        run: yarn gulp server-min
+        run: yarn gulp compile
       
       - name: Download playwright
         working-directory: ./openvscode-server
