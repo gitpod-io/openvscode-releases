@@ -1,11 +1,11 @@
 name: Nightly
 on:
   workflow_dispatch:
-    # inputs:
-    #   parent_commit:
-    #     description: "Parent commit"
-    #     required: true
-    #     default: "upstream/main"
+    inputs:
+      parent_commit:
+        description: "Parent commit"
+        required: true
+        default: "upstream/main"
   # schedule:
   #   - cron: "0 18 * * 1-5"
 
@@ -43,9 +43,9 @@ jobs:
         with:
           node-version: 14
 
-      # - name: Sync with upstream (rebase)
-      #   run: |
-      #     ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} main "code web server initial commit" true
+      - name: Sync with upstream (rebase)
+        run: |
+          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} main "code web server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
@@ -95,9 +95,9 @@ jobs:
         run: |
           yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
 
-      # - name: Push changes to main branch
-      #   run: |
-      #     git push origin main --force-with-lease
+      - name: Push changes to main branch
+        run: |
+          git push origin main --force-with-lease
 
       - name: Write upstream parent commit to file
         if: ${{ success() }}
