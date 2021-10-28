@@ -6,11 +6,8 @@ on:
         description: "Parent commit"
         required: true
         default: "upstream/main"
-  # Trigger after Nightly job to ensure smoke and integration test are passing
-  # and use the same upstream commit
-  # workflow_run:
-  #   workflows: ["Nightly"]
-  #   types: [completed]
+  # schedule:
+  #   - cron: "0 18 * * 1-5"
 
 env:
   PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
@@ -20,7 +17,6 @@ jobs:
     name: Syncing gp-code/main branch
     runs-on: ubuntu-latest
     # timeout-minutes: 30
-    if: github.event.inputs.parent_commit || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,18 +42,6 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 14
-
-      # Get upstream commit from Nightly workflow
-      - name: Download artifact
-        if: github.event.workflow_run.conclusion == 'success'
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: nightly.yml
-          name: upstream_commit
-      - name: Read upstream commit from file
-        if: github.event.workflow_run.conclusion == 'success'
-        run: |
-          echo "PARENT_COMMIT=$(cat __upstream_commit.txt)" >> $GITHUB_ENV
 
       - name: Sync with upstream (rebase)
         run: |
@@ -98,6 +82,17 @@ jobs:
       - name: Push changes to gp-code/main branch
         run: |
           git push origin gp-code/main --force-with-lease
+
+      - name: Write upstream parent commit to file
+        if: ${{ success() }}
+        run: |
+          echo "$(git rev-parse ${{ env.PARENT_COMMIT }})" > __upstream_commit.txt
+      - name: Upload parent commit file
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: upstream_commit
+          path: __upstream_commit.txt
 
       - name: Slack Notification
         if: always()
