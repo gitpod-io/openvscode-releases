@@ -6,8 +6,11 @@ on:
         description: "Parent commit"
         required: true
         default: "upstream/main"
-  # schedule:
-  #   - cron: "0 18 * * 1-5"
+  # Trigger after Nightly job to ensure smoke and integration test are passing
+  # and use the same upstream commit
+  # workflow_run:
+  #   workflows: ["Nightly"]
+  #   types: [completed]
 
 env:
   PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
@@ -17,6 +20,7 @@ jobs:
     name: Syncing gp-code/main branch
     runs-on: ubuntu-latest
     # timeout-minutes: 30
+    if: github.event.inputs.parent_commit || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -43,9 +47,21 @@ jobs:
         with:
           node-version: 14
 
-      - name: Sync with next (rebase)
+      # Get upstream commit from Nightly workflow
+      - name: Download artifact
+        if: github.event.workflow_run.conclusion == 'success'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: nightly.yml
+          name: upstream_commit
+      - name: Read upstream commit from file
+        if: github.event.workflow_run.conclusion == 'success'
         run: |
-          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} gp-code/main "gitpod server initial commit" true
+          echo "PARENT_COMMIT=$(cat __upstream_commit.txt)" >> $GITHUB_ENV
+
+      - name: Sync with upstream (rebase)
+        run: |
+          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} gp-code/main "gitpod server initial commit"
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
