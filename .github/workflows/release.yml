@@ -144,7 +144,7 @@ jobs:
       
       - name: Rename the bundle file
         run: |
-          mv server-pkg/ ${{ env.ARCHIVE_NAME }}/
+          mv vscode-reh-web-linux-x64/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
         if: runner.os != 'Windows'
