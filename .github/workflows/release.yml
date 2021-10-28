@@ -86,7 +86,7 @@ jobs:
       
       - name: Prepare for distribution
         working-directory: ./openvscode-server
-        run: yarn gulp compile
+        run: yarn gulp vscode-reh-web-linux-x64-min
       
       - name: Download playwright
         working-directory: ./openvscode-server
@@ -104,14 +104,14 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/server-pkg" \
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-x64"
           ./resources/server/test/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/server-pkg" \
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-x64"
           yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
       
       - name: Determine archive filename
