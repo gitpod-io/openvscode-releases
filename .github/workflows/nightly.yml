@@ -6,8 +6,8 @@ on:
         description: "Parent commit"
         required: true
         default: "upstream/main"
-  # schedule:
-  #   - cron: "0 18 * * 1-5"
+  schedule:
+    - cron: "0 18 * * 1-5"
 
 env:
   PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
