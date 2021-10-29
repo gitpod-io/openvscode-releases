@@ -45,7 +45,6 @@ jobs:
 
       - name: Sync with upstream (rebase)
         run: |
-          chmod +x ./scripts/sync-with-upstream.sh
           ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} main "code web server initial commit" true
 
       - name: Compute node modules cache key

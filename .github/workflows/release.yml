@@ -13,9 +13,9 @@ on:
         description: 'Create GitHub and DockerHub Release'
         required: false
         default: "false"
-  # workflow_run:
-  #   workflows: ["Nightly"]
-  #   types: [completed]
+  workflow_run:
+    workflows: ["Nightly"]
+    types: [completed]
 
 env:
   QUALITY: ${{ github.event.inputs.quality || 'nightly' }}
