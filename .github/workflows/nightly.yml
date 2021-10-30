@@ -19,7 +19,7 @@ env:
 
 jobs:
   sync-main:
-    name: Syncing main branch
+    name: Syncing openvscode-server
     runs-on: ubuntu-latest
     # timeout-minutes: 30
     steps:
@@ -100,7 +100,7 @@ jobs:
         run: |
           yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
 
-      - name: Push changes to main branch
+      - name: Push changes
         run: |
           git push origin ${{ env.UPDATE_BRANCH }} --force-with-lease
 
