@@ -6,8 +6,8 @@ on:
         description: "Parent commit"
         required: true
         default: "upstream/main"
-      release_branch:
-        description: "The branch to release from"
+      update_branch:
+        description: "The branch to update"
         required: true
         default: "main"
   schedule:
@@ -15,7 +15,7 @@ on:
 
 env:
   PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
-  RELEASE_BRANCH: ${{ github.event.inputs.release_branch || 'main' }}
+  UPDATE_BRANCH: ${{ github.event.inputs.update_branch || 'main' }}
 
 jobs:
   sync-main:
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: "gitpod-io/openvscode-server"
-          ref: ${{ env.RELEASE_BRANCH }}
+          ref: ${{ env.UPDATE_BRANCH }}
           fetch-depth: 0
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
@@ -50,7 +50,7 @@ jobs:
 
       - name: Sync with upstream (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} ${{ env.RELEASE_BRANCH }} "code web server initial commit" true
+          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} ${{ env.UPDATE_BRANCH }} "code web server initial commit" true
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
@@ -102,7 +102,7 @@ jobs:
 
       - name: Push changes to main branch
         run: |
-          git push origin main --force-with-lease
+          git push origin ${{ env.UPDATE_BRANCH }} --force-with-lease
 
       - name: Write upstream parent commit to file
         if: ${{ success() }}
@@ -115,16 +115,18 @@ jobs:
           name: upstream_commit
           path: __upstream_commit.txt
       
+      # Store HEAD commit to make a nightly release (release.yml)
       - name: Write the release commit to a file
         if: ${{ success() }}
         run: |
           echo "$(git rev-parse HEAD)" > __release_commit.txt
-      - name: Upload parent commit file
+      - name: Upload release commit file
         if: ${{ success() }}
         uses: actions/upload-artifact@v2
         with:
           name: release_commit
           path: __release_commit.txt
+      
       - name: Upload logs files
         if: ${{ failure() && (steps.runSmokeTests.outcome == 'failure' || steps.runIntegrationTests.outcome == 'failure') }}
         uses: actions/upload-artifact@v2

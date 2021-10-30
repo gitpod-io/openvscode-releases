@@ -39,10 +39,11 @@ jobs:
         with:
           workflow: nightly.yml
           name: release_commit
-      - name: Read upstream commit from file
+      - name: Read release commit from file
         if: github.event.workflow_run.conclusion == 'success'
         run: |
           echo "RELEASE_COMMIT=$(cat __release_commit.txt)" >> $GITHUB_ENV
+      
       - uses: actions/checkout@v2
         with:
           repository: gitpod-io/openvscode-server

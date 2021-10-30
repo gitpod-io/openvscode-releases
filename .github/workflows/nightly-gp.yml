@@ -6,11 +6,16 @@ on:
         description: "Parent commit"
         required: true
         default: "upstream/main"
+      update_branch:
+        description: "The branch to update"
+        required: true
+        default: "gp-code/main"
   schedule:
     - cron: "0 18 * * 1-5"
 
 env:
   PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
+  UPDATE_BRANCH: ${{ github.event.inputs.update_branch || 'gp-code/main' }}
 
 jobs:
   sync-gp-code:
@@ -21,7 +26,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: "gitpod-io/openvscode-server"
-          ref: "gp-code/main"
+          ref: ${{ env.UPDATE_BRANCH }}
           fetch-depth: 0
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
@@ -45,7 +50,7 @@ jobs:
 
       - name: Sync with upstream (rebase)
         run: |
-          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} gp-code/main "gitpod server initial commit"
+          ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} ${{ env.UPDATE_BRANCH }} "gitpod server initial commit"
 
       - name: Compute node modules cache key
         id: nodeModulesCacheKey
@@ -81,7 +86,7 @@ jobs:
 
       - name: Push changes to gp-code/main branch
         run: |
-          git push origin gp-code/main --force-with-lease
+          git push origin ${{ env.UPDATE_BRANCH }} --force-with-lease
 
       - name: Write upstream parent commit to file
         if: ${{ success() }}
