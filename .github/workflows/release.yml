@@ -6,7 +6,7 @@ on:
         description: 'Commit to release'
         required: true
       quality:
-        description: 'Quality: nightly or stable'
+        description: 'Quality: insiders or stable'
         required: true
         default: stable
       uploadRelease:
@@ -14,11 +14,11 @@ on:
         required: false
         default: "false"
   workflow_run:
-    workflows: ["Nightly"]
+    workflows: ["Insiders"]
     types: [completed]
 
 env:
-  QUALITY: ${{ github.event.inputs.quality || 'nightly' }}
+  QUALITY: ${{ github.event.inputs.quality || 'insiders' }}
   RELEASE_COMMIT: ${{ github.event.inputs.commit || 'main' }}
 
 jobs:
@@ -32,12 +32,12 @@ jobs:
     name: Build on ${{ matrix.os }}      
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:  
-        # Get the release commit from the Nightly workflow
+        # Get the release commit from the Insiders workflow
       - name: Download artifact
         if: github.event.workflow_run.conclusion == 'success'
         uses: dawidd6/action-download-artifact@v2
         with:
-          workflow: nightly.yml
+          workflow: insiders.yml
           name: release_commit
       - name: Read release commit from file
         if: github.event.workflow_run.conclusion == 'success'
@@ -149,7 +149,7 @@ jobs:
       - name: Set archive file name
         run: |
           os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
-          quality_name=$([ "$QUALITY" == "nightly" ] && echo "-nightly" || echo "")
+          quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
           name="openvscode-server${quality_name}-v${VERSION}-${os_name}-x64"
           echo "ARCHIVE_NAME=$name" >> $GITHUB_ENV
           echo "ARCHIVE_FULL_NAME=$name.$EXTENSION" >> $GITHUB_ENV
@@ -207,27 +207,27 @@ jobs:
             outputs/**/*.tar.gz
             outputs/**/*.zip
 
-      - name: Delete previous nightly release
-        if: env.QUALITY == 'nightly'
+      - name: Delete previous insiders release
+        if: env.QUALITY == 'insiders'
         uses: dev-drprasad/delete-older-releases@v0.2.0
         with:
           repo: gitpod-io/openvscode-server
           keep_latest: 0
           delete_tags: true
-          delete_tag_pattern: openvscode-server-nightly
+          delete_tag_pattern: openvscode-server-insiders
         env:
           GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
       - name: Sleep
-        if: env.QUALITY == 'nightly'
+        if: env.QUALITY == 'insiders'
         run: sleep 30s
-      - name: Create nightly release
-        if: env.QUALITY == 'nightly'
+      - name: Create Insiders release
+        if: env.QUALITY == 'insiders'
         uses: softprops/action-gh-release@v1
         with:
           repository: gitpod-io/openvscode-server
           target_commitish: ${{ env.RELEASE_COMMIT }}
-          body: OpenVSCode Server Nightly v${{ env.VERSION }}
-          tag_name: openvscode-server-nightly-v${{ env.VERSION }}
+          body: OpenVSCode Server Insiders v${{ env.VERSION }}
+          tag_name: openvscode-server-insiders-v${{ env.VERSION }}
           prerelease: true
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
           files: |
@@ -267,7 +267,8 @@ jobs:
             gitpod/openvscode-server
           tags: |
             type=semver,pattern={{version}},value=v${{ env.VERSION }},enable=${{ env.QUALITY == 'stable' }}
-            type=raw,value=nightly,enable=${{ env.QUALITY == 'nightly' }}
+            type=raw,value=insiders,enable=${{ env.QUALITY == 'insiders' }}
+            type=raw,value=nightly,enable=${{ env.QUALITY == 'insiders' }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
