@@ -25,7 +25,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            gitpod/openvscode-server
+            deviantony/openvscode-server
           tags: |
             type=semver,pattern={{version}},value=v${{ env.VERSION }},enable=${{ env.QUALITY == 'stable' }}
             type=raw,value=insiders,enable=${{ env.QUALITY == 'insiders' }}
