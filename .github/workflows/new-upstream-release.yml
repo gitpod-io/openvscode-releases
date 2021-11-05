@@ -25,7 +25,8 @@ jobs:
             });
 
             const releaseTag = '1.61.2';//latestRelease.tag_name;
-            const nextRelease = `release/${semver.inc(releaseTag, 'minor')}`
+            const nextReleaseTag = semver.inc(releaseTag, 'minor');
+            const nextRelease = `release/${semver.major(nextReleaseTag)}.${semver.minor(nextReleaseTag)}`;
             console.log(nextRelease);
 
             const { data: releaseBranch} = await github.rest.repos.getBranch({
