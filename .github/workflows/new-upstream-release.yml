@@ -1,0 +1,36 @@
+name: Notify new upstream release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0/4 * * 1-5"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - run: npm init --yes
+      - run: npm install semver
+
+      - uses: actions/github-script@v5
+        with:
+          script: |
+            const semver = require('semver');
+
+            const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+              'microsoft',
+              'vscode',
+            });
+
+            const releaseTag = latestRelease.tag_name;
+            const nextRelease = `release/${semver.inc(releaseTag, 'minor')}`
+            console.log(nextRelease)
+
+            const { data: releaseBranch} = await github.rest.repos.getBranch({
+              'microsoft',
+              'vscode',
+              nextRelease,
+            });
+            console.log(branchResp)
