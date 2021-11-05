@@ -34,7 +34,7 @@ jobs:
               repo: 'vscode',
               branch: nextRelease
             });
-            console.log(branchResp);
+            console.log(releaseBranch);
 
       - name: Slack Notification
         if: success()
