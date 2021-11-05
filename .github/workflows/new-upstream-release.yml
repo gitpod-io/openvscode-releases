@@ -20,8 +20,8 @@ jobs:
             const semver = require('semver');
 
             const { data: latestRelease } = await github.rest.repos.getLatestRelease({
-              'microsoft',
-              'vscode',
+              owner: 'microsoft',
+              repo: 'vscode'
             });
 
             const releaseTag = latestRelease.tag_name;
@@ -29,8 +29,8 @@ jobs:
             console.log(nextRelease)
 
             const { data: releaseBranch} = await github.rest.repos.getBranch({
-              'microsoft',
-              'vscode',
-              nextRelease,
+              owner: 'microsoft',
+              repo: 'vscode',
+              branch: nextRelease
             });
             console.log(branchResp)
