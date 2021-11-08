@@ -68,7 +68,7 @@ jobs:
             return releaseBranch ? false : true;
 
       - name: Slack Notification
-        if: steps.new-release.outputs.result === 'true'
+        if: steps.new-release.outputs.result == 'true'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
