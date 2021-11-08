@@ -28,6 +28,7 @@ jobs:
         # os: [ubuntu-18.04, macos-11, windows-latest]
         # support only ubuntu for now
         os: [ubuntu-18.04]
+        arch: [x64, arm64]
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }}      
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
@@ -98,7 +99,7 @@ jobs:
       
       - name: Prepare for distribution
         working-directory: ./openvscode-server
-        run: yarn gulp vscode-reh-web-linux-x64-min
+        run: yarn gulp vscode-reh-web-linux-${{ matrix.arch }}-min
       
       - name: Download playwright
         working-directory: ./openvscode-server
@@ -116,14 +117,14 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-x64" \
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
           ./resources/server/test/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-x64" \
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
           yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
       
       - name: Determine archive filename
@@ -144,19 +145,19 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           chcp 65001
-          echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64") >> $env:GITHUB_ENV
-          echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-${{ matrix.arch }}") >> $env:GITHUB_ENV
+          echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-${{ matrix.arch }}.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
       - name: Set archive file name
         run: |
           os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
           quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
-          name="openvscode-server${quality_name}-v${VERSION}-${os_name}-x64"
+          name="openvscode-server${quality_name}-v${VERSION}-${os_name}-${{ matrix.arch }}"
           echo "ARCHIVE_NAME=$name" >> $GITHUB_ENV
           echo "ARCHIVE_FULL_NAME=$name.$EXTENSION" >> $GITHUB_ENV
       
       - name: Rename the bundle file
         run: |
-          mv vscode-reh-web-linux-x64/ ${{ env.ARCHIVE_NAME }}/
+          mv vscode-reh-web-linux-${{ matrix.arch }}/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
         if: runner.os != 'Windows'
@@ -170,7 +171,7 @@ jobs:
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ runner.os }}-x64
+          name: ${{ runner.os }}-${{ matrix.arch }}
           path: ${{ env.ARCHIVE_FULL_NAME }}
 
       - name: Slack Notification
