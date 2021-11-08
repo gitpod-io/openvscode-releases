@@ -121,6 +121,8 @@ jobs:
           ./resources/server/test/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
+        # Smoke tests requires a runner with the same architecture as the built vscode
+        if: matrix.arch == 'x64'
         working-directory: ./openvscode-server
         run: |
           set -e
