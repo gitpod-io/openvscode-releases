@@ -5,6 +5,7 @@ ARG RELEASE_TAG
 ARG USERNAME=openvscode-server
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+ARG OPENVSCODE_SERVER_ROOT="/home/${RELEASE_TAG}"
 
 RUN apt update && \
     apt install -y git wget sudo && \
@@ -13,9 +14,16 @@ RUN apt update && \
 WORKDIR /home/
 
 # Downloading the latest VSC Server release and extracting the release archive
-RUN wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-x64.tar.gz && \
-    tar -xzf ${RELEASE_TAG}-linux-x64.tar.gz && \
-    rm -f ${RELEASE_TAG}-linux-x64.tar.gz
+RUN arch=$(uname -m) && \
+    if [ "${arch}" = "x86_64" ]; then \
+        arch="x64"; \
+    elif [ "${arch}" = "aarch64" ]; then \
+        arch="arm64"; \
+    fi && \
+    wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-${arch}.tar.gz && \
+    tar -xzf ${RELEASE_TAG}-linux-${arch}.tar.gz && \
+    mv -f ${RELEASE_TAG}-linux-${arch} ${OPENVSCODE_SERVER_ROOT} && \
+    rm -f ${RELEASE_TAG}-linux-${arch}.tar.gz
 
 # Creating the user and usergroup
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -26,19 +34,19 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN chmod g+rw /home && \
     mkdir -p /home/workspace && \
     chown -R $USERNAME:$USERNAME /home/workspace && \
-    chown -R $USERNAME:$USERNAME /home/${RELEASE_TAG}-linux-x64;
+    chown -R $USERNAME:$USERNAME ${OPENVSCODE_SERVER_ROOT};
 
 USER $USERNAME
 
 WORKDIR /home/workspace/
 
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-ENV HOME=/home/workspace
-ENV EDITOR=code
-ENV VISUAL=code
-ENV GIT_EDITOR="code --wait"
-ENV OPENVSCODE_SERVER_ROOT=/home/${RELEASE_TAG}-linux-x64
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    HOME=/home/workspace \
+    EDITOR=code \
+    VISUAL=code \
+    GIT_EDITOR="code --wait" \
+    OPENVSCODE_SERVER_ROOT=${OPENVSCODE_SERVER_ROOT}
 
 EXPOSE 3000
 
