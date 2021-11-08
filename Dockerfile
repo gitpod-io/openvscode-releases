@@ -1,29 +1,34 @@
 FROM ubuntu:18.04
 
-ARG RELEASE_TAG
-
-ARG USERNAME=openvscode-server
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-ARG OPENVSCODE_SERVER_ROOT="/home/${RELEASE_TAG}"
-
 RUN apt update && \
     apt install -y git wget sudo && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/
 
+ARG RELEASE_TAG
+ARG RELEASE_ORG="gitpod-io"
+ARG OPENVSCODE_SERVER_ROOT="/home/${RELEASE_TAG}"
+
 # Downloading the latest VSC Server release and extracting the release archive
-RUN arch=$(uname -m) && \
+RUN if [ -z "${RELEASE_TAG}" ]; then \
+        echo "The RELEASE_TAG build arg must be set." >&2 && \
+        exit 1; \
+    fi && \
+    arch=$(uname -m) && \
     if [ "${arch}" = "x86_64" ]; then \
         arch="x64"; \
     elif [ "${arch}" = "aarch64" ]; then \
         arch="arm64"; \
     fi && \
-    wget https://github.com/gitpod-io/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-${arch}.tar.gz && \
+    wget https://github.com/${RELEASE_ORG}/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-${arch}.tar.gz && \
     tar -xzf ${RELEASE_TAG}-linux-${arch}.tar.gz && \
     mv -f ${RELEASE_TAG}-linux-${arch} ${OPENVSCODE_SERVER_ROOT} && \
     rm -f ${RELEASE_TAG}-linux-${arch}.tar.gz
+
+ARG USERNAME=openvscode-server
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 
 # Creating the user and usergroup
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -50,4 +55,4 @@ ENV LANG=C.UTF-8 \
 
 EXPOSE 3000
 
-ENTRYPOINT ${OPENVSCODE_SERVER_ROOT}/server.sh --port 3000
+ENTRYPOINT ["${OPENVSCODE_SERVER_ROOT}/server.sh", "--port", "3000"]

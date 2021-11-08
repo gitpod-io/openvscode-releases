@@ -49,5 +49,7 @@ jobs:
           push: true
           context: .
           platforms: linux/amd64,linux/arm64
-          build-args: RELEASE_TAG=${{ github.event.inputs.release_tag }}
+          build-args: |
+            RELEASE_TAG=${{ github.event.inputs.release_tag }}
+            RELEASE_ORG=${{ github.repository_owner }}
           tags: ${{ steps.meta.outputs.tags }}
