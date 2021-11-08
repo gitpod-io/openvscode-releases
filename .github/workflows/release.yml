@@ -28,9 +28,9 @@ jobs:
         # os: [ubuntu-18.04, macos-11, windows-latest]
         # support only ubuntu for now
         os: [ubuntu-18.04]
-        arch: [x64, arm64]
+        arch: [x64, arm64, armhf]
     runs-on: ${{ matrix.os }}
-    name: Build on ${{ matrix.os }} ${{ matrix.arch }}
+    name: Build on ${{ matrix.os }}/${{ matrix.arch }}
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:  
         # Get the release commit from the Insiders workflow
@@ -290,7 +290,7 @@ jobs:
         with:
           push: true
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: |
             RELEASE_TAG=${{ env.RELEASE_TAG }}
             RELEASE_ORG=${{ github.repository_owner }}

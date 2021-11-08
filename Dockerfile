@@ -20,6 +20,8 @@ RUN if [ -z "${RELEASE_TAG}" ]; then \
         arch="x64"; \
     elif [ "${arch}" = "aarch64" ]; then \
         arch="arm64"; \
+    elif [ "${arch}" = "armv7l" ]; then \
+        arch="armhf"; \
     fi && \
     wget https://github.com/${RELEASE_ORG}/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-${arch}.tar.gz && \
     tar -xzf ${RELEASE_TAG}-linux-${arch}.tar.gz && \
