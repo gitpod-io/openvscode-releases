@@ -6,11 +6,16 @@ on:
         description: 'Commit to release'
         required: true
       quality:
-        description: 'Quality: insiders or stable'
+        description: 'Quality'
         required: true
+        type: choice
+        options: 
+        - insiders
+        - stable
         default: stable
       uploadRelease:
         description: 'Create GitHub and DockerHub Release'
+        type: boolean
         required: false
         default: "false"
   workflow_run:
