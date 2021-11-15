@@ -57,4 +57,4 @@ ENV LANG=C.UTF-8 \
 
 EXPOSE 3000
 
-ENTRYPOINT ["${OPENVSCODE_SERVER_ROOT}/server.sh", "--port", "3000"]
+ENTRYPOINT [ "/bin/sh", "-c", "exec ${OPENVSCODE_SERVER_ROOT}/server.sh --port 3000 \"${@}\"", "--" ]
