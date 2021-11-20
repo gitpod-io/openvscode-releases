@@ -107,8 +107,15 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
-          npm_config_arch: ${{ matrix.npm_arch }}
-        run: yarn --frozen-lockfile --network-timeout 180000
+        run: |
+          set -e
+          export npm_config_arch=${{ matrix.npm_arch }}
+          if [ ${{ matrix.vscode_arch }} = "x64" ]; then
+            export VSCODE_REMOTE_CC=$(which gcc-4.8)
+            export VSCODE_REMOTE_CXX=$(which g++-4.8)
+          fi
+
+          yarn --frozen-lockfile --network-timeout 180000
       
       - name: Prepare for distribution
         working-directory: ./openvscode-server
