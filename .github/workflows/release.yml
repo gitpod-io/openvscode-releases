@@ -32,7 +32,8 @@ jobs:
       matrix:
         # support only linux for now
         os: [ubuntu-18.04]
-        arch: [x64, arm64, armhf]
+        arch: [x64]
+        # arch: [x64, arm64, armhf]
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }}/${{ matrix.arch }}
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
@@ -105,33 +106,33 @@ jobs:
         working-directory: ./openvscode-server
         run: yarn gulp vscode-reh-web-linux-${{ matrix.arch }}-min
       
-      - name: Download playwright
-        working-directory: ./openvscode-server
-        run: |
-          yarn playwright-install 
+      # - name: Download playwright
+      #   working-directory: ./openvscode-server
+      #   run: |
+      #     yarn playwright-install 
 
-      - name: Compile test suites
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          yarn --cwd test/smoke compile
-          yarn --cwd test/integration/browser compile
+      # - name: Compile test suites
+      #   working-directory: ./openvscode-server
+      #   run: |
+      #     set -e
+      #     yarn --cwd test/smoke compile
+      #     yarn --cwd test/integration/browser compile
 
-      - name: Run integration tests
-        if: matrix.arch == 'x64'
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
-          ./resources/server/test/test-web-integration.sh --browser chromium
+      # - name: Run integration tests
+      #   if: matrix.arch == 'x64'
+      #   working-directory: ./openvscode-server
+      #   run: |
+      #     set -e
+      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
+      #     ./resources/server/test/test-web-integration.sh --browser chromium
 
-      - name: Run smoke tests
-        if: matrix.arch == 'x64'
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+      # - name: Run smoke tests
+      #   if: matrix.arch == 'x64'
+      #   working-directory: ./openvscode-server
+      #   run: |
+      #     set -e
+      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
+      #     yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
           
       - name: Set environment variables
         run: |
@@ -146,11 +147,12 @@ jobs:
       
       - name: Rename the bundle file
         run: |
+          ls -l vscode-reh-web-linux-${{ matrix.arch }}/extensions/markdown-language-features
           mv vscode-reh-web-linux-${{ matrix.arch }}/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
         run: |
-          sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/ > /dev/null
+          sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/
       
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
@@ -158,12 +160,12 @@ jobs:
           name: ${{ runner.os }}-${{ matrix.arch }}
           path: ${{ env.ARCHIVE_FULL_NAME }}
 
-      - name: Slack Notification
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
+      # - name: Slack Notification
+      #   if: always()
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      #     SLACK_COLOR: ${{ job.status }}
   
   upload:
     needs: build 
