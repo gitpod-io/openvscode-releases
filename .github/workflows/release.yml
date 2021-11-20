@@ -77,6 +77,9 @@ jobs:
       
       - name: Install Yarn
         run: npm install -g yarn
+
+      - name: Config npm
+        run: npm config set scripts-prepend-node-path true
       
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
