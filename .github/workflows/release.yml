@@ -146,17 +146,16 @@ jobs:
           
       - name: Bundle tarfile
         run: |
-          echo "VERSION=$(node -p -e "require('./openvscode-server/package.json').version")" >> $GITHUB_ENV
+          version=$(node -p -e "require('./openvscode-server/package.json').version")
           quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
-          name="openvscode-server${quality_name}-v${VERSION}-linux-${{ matrix.vscode_arch }}"
-          echo "ARCHIVE_FULL_NAME=${name}.tar.gz" >> $GITHUB_ENV
-          tar cfzv ${{ env.ARCHIVE_FULL_NAME }} vscode-reh-web-linux-${{ matrix.vscode_arch }}/
+          name="openvscode-server${quality_name}-v${version}-linux-${{ matrix.vscode_arch }}"
+          tar cfzv ${name}.tar.gz vscode-reh-web-linux-${{ matrix.vscode_arch }}/
       
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
           name: linux-${{ matrix.vscode_arch }}
-          path: ${{ env.ARCHIVE_FULL_NAME }}
+          path: openvscode-server-*.tar.gz
 
       # - name: Slack Notification
       #   if: always()
