@@ -87,8 +87,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "openvscode-server/**/node_modules"
-          key: linux-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: linux-cacheNodeModules14-
+          key: linux-cacheNodeModules15-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-cacheNodeModules15-
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
@@ -103,7 +103,7 @@ jobs:
           restore-keys: linux-${{ matrix.npm_arch }}-yarnCacheDir-
       - name: Execute yarn
         working-directory: ./openvscode-server
-        # if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
