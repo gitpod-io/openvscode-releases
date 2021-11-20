@@ -77,10 +77,7 @@ jobs:
       
       - name: Install Yarn
         run: npm install -g yarn
-
-      - name: Config npm
-        run: npm config set scripts-prepend-node-path true
-      
+    
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
@@ -110,6 +107,7 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+          npm_config_arch: ${{ matrix.npm_arch }}
         run: yarn --frozen-lockfile --network-timeout 180000
       
       - name: Prepare for distribution
