@@ -30,8 +30,7 @@ jobs:
   build:
     strategy:
       matrix:
-        # os: [ubuntu-18.04, macos-11, windows-latest]
-        # support only ubuntu for now
+        # support only linux for now
         os: [ubuntu-18.04]
         arch: [x64, arm64, armhf]
     runs-on: ${{ matrix.os }}
@@ -133,47 +132,25 @@ jobs:
           set -e
           VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
           yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
-      
-      - name: Determine archive filename
-        uses: haya14busa/action-cond@v1
-        id: archive
-        with:
-          cond: ${{ runner.os == 'Windows' }}
-          if_true: 'zip'
-          if_false: 'tar.gz'
-      
-      - name: Set environment variables (Linux & macOS)
-        if: runner.os != 'Windows'
+          
+      - name: Set environment variables
         run: |
-          echo "EXTENSION=${{ steps.archive.outputs.value }}" >> $GITHUB_ENV
           echo "VERSION=$(node -p -e "require('./openvscode-server/package.json').version")" >> $GITHUB_ENV
-      
-      - name: Set archive file name (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          chcp 65001
-          echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-${{ matrix.arch }}") >> $env:GITHUB_ENV
-          echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-${{ matrix.arch }}.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
       - name: Set archive file name
         run: |
           os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
           quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
           name="openvscode-server${quality_name}-v${VERSION}-${os_name}-${{ matrix.arch }}"
-          echo "ARCHIVE_NAME=$name" >> $GITHUB_ENV
-          echo "ARCHIVE_FULL_NAME=$name.$EXTENSION" >> $GITHUB_ENV
+          echo "ARCHIVE_NAME=${name}" >> $GITHUB_ENV
+          echo "ARCHIVE_FULL_NAME=${name}.tar.gz" >> $GITHUB_ENV
       
       - name: Rename the bundle file
         run: |
           mv vscode-reh-web-linux-${{ matrix.arch }}/ ${{ env.ARCHIVE_NAME }}/
       
       - name: Bundle tarfile
-        if: runner.os != 'Windows'
         run: |
           sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/ > /dev/null
-      - name: Bundle zip
-        if: runner.os == 'Windows'
-        run: |
-          Compress-Archive -Path ${{ env.ARCHIVE_NAME }}\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_FULL_NAME }}
       
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
