@@ -28,14 +28,28 @@ env:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+      env:
+        OS_NAME: 'linux'
+        VSCODE_ARCH: ${{ matrix.vscode_arch }}
+
+    # support only linux for now
     strategy:
+      fail-fast: false
       matrix:
-        # support only linux for now
-        os: [ubuntu-18.04]
-        arch: [x64]
-        # arch: [x64, arm64, armhf]
-    runs-on: ${{ matrix.os }}
-    name: Build on ${{ matrix.os }}/${{ matrix.arch }}
+        include:
+        - vscode_arch: x64
+          npm_arch: x64
+          image: vscodium/vscodium-linux-build-agent:bionic-x64
+        - vscode_arch: arm64
+          npm_arch: arm64
+          image: vscodium/vscodium-linux-build-agent:stretch-arm64
+        - vscode_arch: armhf
+          npm_arch: armv7l
+          image: vscodium/vscodium-linux-build-agent:stretch-armhf
+
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:  
         # Get the release commit from the Insiders workflow
@@ -57,19 +71,12 @@ jobs:
           path: openvscode-server
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
-      - name: Setup Build Environment
-        working-directory: ./openvscode-server
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libxkbfile-dev pkg-config libsecret-1-dev libxss1 dbus xvfb libgtk-3-0 libgbm1
-          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
-          sudo chmod +x /etc/init.d/xvfb
-          sudo update-rc.d xvfb defaults
-          sudo service xvfb start
-
       - uses: actions/setup-node@v2
         with:
           node-version: 14
+      
+      - name: Install Yarn
+        run: npm install -g yarn
       
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
@@ -80,8 +87,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "openvscode-server/**/node_modules"
-          key: ${{ runner.os }}-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-cacheNodeModules14-
+          key: linux-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-cacheNodeModules14-
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
@@ -92,8 +99,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-yarnCacheDir-
+          key: linux-${{ matrix.npm_arch }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-${{ matrix.npm_arch }}-yarnCacheDir-
       - name: Execute yarn
         working-directory: ./openvscode-server
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
@@ -104,7 +111,7 @@ jobs:
       
       - name: Prepare for distribution
         working-directory: ./openvscode-server
-        run: yarn gulp vscode-reh-web-linux-${{ matrix.arch }}-min
+        run: yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
       
       # - name: Download playwright
       #   working-directory: ./openvscode-server
@@ -119,45 +126,33 @@ jobs:
       #     yarn --cwd test/integration/browser compile
 
       # - name: Run integration tests
-      #   if: matrix.arch == 'x64'
+      #   if: matrix.vscode_arch == 'x64'
       #   working-directory: ./openvscode-server
       #   run: |
       #     set -e
-      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
+      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
       #     ./resources/server/test/test-web-integration.sh --browser chromium
 
       # - name: Run smoke tests
-      #   if: matrix.arch == 'x64'
+      #   if: matrix.vscode_arch == 'x64'
       #   working-directory: ./openvscode-server
       #   run: |
       #     set -e
-      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.arch }}" \
+      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
       #     yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
           
-      - name: Set environment variables
-        run: |
-          echo "VERSION=$(node -p -e "require('./openvscode-server/package.json').version")" >> $GITHUB_ENV
-      - name: Set archive file name
-        run: |
-          os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
-          quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
-          name="openvscode-server${quality_name}-v${VERSION}-${os_name}-${{ matrix.arch }}"
-          echo "ARCHIVE_NAME=${name}" >> $GITHUB_ENV
-          echo "ARCHIVE_FULL_NAME=${name}.tar.gz" >> $GITHUB_ENV
-      
-      - name: Rename the bundle file
-        run: |
-          ls -l vscode-reh-web-linux-${{ matrix.arch }}/extensions/markdown-language-features
-          mv vscode-reh-web-linux-${{ matrix.arch }}/ ${{ env.ARCHIVE_NAME }}/
-      
       - name: Bundle tarfile
         run: |
-          sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/
+          echo "VERSION=$(node -p -e "require('./openvscode-server/package.json').version")" >> $GITHUB_ENV
+          quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
+          name="openvscode-server${quality_name}-v${VERSION}-linux-${{ matrix.vscode_arch }}"
+          echo "ARCHIVE_FULL_NAME=${name}.tar.gz" >> $GITHUB_ENV
+          tar cfzv ${{ env.ARCHIVE_FULL_NAME }} vscode-reh-web-linux-${{ matrix.vscode_arch }}/
       
       - name: Archive sanity check
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ runner.os }}-${{ matrix.arch }}
+          name: linux-${{ matrix.vscode_arch }}
           path: ${{ env.ARCHIVE_FULL_NAME }}
 
       # - name: Slack Notification
