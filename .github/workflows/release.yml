@@ -43,12 +43,12 @@ jobs:
         - vscode_arch: x64
           npm_arch: x64
           image: vscodium/vscodium-linux-build-agent:bionic-x64
-        # - vscode_arch: arm64
-        #   npm_arch: arm64
-        #   image: vscodium/vscodium-linux-build-agent:stretch-arm64
-        # - vscode_arch: armhf
-        #   npm_arch: armv7l
-        #   image: vscodium/vscodium-linux-build-agent:stretch-armhf
+        - vscode_arch: arm64
+          npm_arch: arm64
+          image: vscodium/vscodium-linux-build-agent:stretch-arm64
+        - vscode_arch: armhf
+          npm_arch: armv7l
+          image: vscodium/vscodium-linux-build-agent:stretch-armhf
 
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:  
@@ -140,10 +140,7 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-
-          ls -lR ../vscode-reh-web-linux-${{ matrix.vscode_arch }}/node_modules/native-watchdog
-
-          VSCODE_REMOTE_SERVER_PATH="../vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
           ./resources/server/test/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
@@ -151,8 +148,8 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="../vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
+          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
           
       - name: Bundle tarfile
         run: |
