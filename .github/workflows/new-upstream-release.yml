@@ -2,7 +2,7 @@ name: Notify new upstream release
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0/4 * * 1-5"
+    - cron: "0 0/6 * * 1-5"
 
 jobs:
   notify:
@@ -45,7 +45,7 @@ jobs:
                 repo: 'vscode',
                 branch: nextRelease
               });
-              upstreamReleaseBranch = reponse.data;
+              upstreamReleaseBranch = response.data;
               console.log(upstreamReleaseBranch);
             } catch (e) {
               console.error(e);
@@ -59,7 +59,7 @@ jobs:
                 repo: 'openvscode-server',
                 branch: nextRelease
               });
-              releaseBranch = reponse.data;
+              releaseBranch = response.data;
             } catch (e) {
               console.log(e);
             }
