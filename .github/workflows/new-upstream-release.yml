@@ -116,7 +116,7 @@ jobs:
                 owner: 'gitpod-io',
                 repo: 'openvscode-server',
                 sha: currentRelease,
-                per_page: 100
+                per_page: 100,
                 page: 1
               });
 
@@ -141,7 +141,7 @@ jobs:
                 owner: 'microsoft',
                 repo: 'vscode',
                 sha: currentRelease,
-                per_page: 100
+                per_page: 100,
                 page: 1
               });
 
