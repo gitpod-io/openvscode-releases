@@ -125,7 +125,7 @@ jobs:
                 return commitData.commit.message === 'code web server initial commit';
               });
               lastSyncCommit = initialCommitIdx >= 0 ? commitsArr[initialCommitIdx + 1] : undefined;
-              console.log(lastSyncCommit);
+              console.log(lastSyncCommit.html_url);
             } catch (e) {
               console.error(e);
               return false;
