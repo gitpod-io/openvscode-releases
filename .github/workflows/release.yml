@@ -131,12 +131,10 @@ jobs:
       - name: Compile test suites
         if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
-        # Workaround: update path before running yarn script
-        # https://github.com/microsoft/vscode/commit/9be2757019a189f514f02f6f9371dfc5f2632730#commitcomment-64133503
         run: |
           set -e
-          PATH=$PWD/node_modules/.bin:$PATH yarn --cwd test/smoke compile
-          PATH=$PWD/node_modules/.bin:$PATH yarn --cwd test/integration/browser compile
+          yarn --cwd test/smoke compile
+          yarn --cwd test/integration/browser compile
 
       - name: Run integration tests
         if: matrix.vscode_arch == 'x64'
