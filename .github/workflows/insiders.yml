@@ -94,7 +94,7 @@ jobs:
       - name: Run integration tests
         id: runIntegrationTests
         run: |
-          ./resources/server/test/test-web-integration.sh --browser chromium
+          ./scripts/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
         id: runSmokeTests
