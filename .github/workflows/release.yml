@@ -142,7 +142,7 @@ jobs:
         run: |
           set -e
           VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-          ./resources/server/test/test-web-integration.sh --browser chromium
+          ./scripts/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
         if: matrix.vscode_arch == 'x64'
