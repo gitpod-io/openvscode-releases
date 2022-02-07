@@ -38,7 +38,7 @@ jobs:
         run: |
           set -e
           version=${{ inputs.version }}
-          quality_name=$([ ${{ inputs.stable }} -ne 0 ] && echo "-insiders" || echo "")
+          quality_name=$([ ${{ inputs.stable }} = "false" ] && echo "-insiders" || echo "")
           echo "RELEASE_TAG=openvscode-server${quality_name}-v${version}" >> $GITHUB_ENV
 
       - name: Docker meta
