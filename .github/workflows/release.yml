@@ -25,8 +25,6 @@ on:
 env:
   QUALITY: ${{ github.event.inputs.quality || 'insiders' }}
   RELEASE_COMMIT: ${{ github.event.inputs.commit || 'main' }}
-  # Will set in build job
-  VERSION: ''
 
 jobs:
   build-dependencies:
@@ -96,6 +94,10 @@ jobs:
 
     name: Build linux-${{ matrix.vscode_arch }}
     needs: build-dependencies
+    outputs:
+      release_commit: ${{ steps.bundle_tar.outputs.release_commit }}
+      version: ${{ steps.bundle_tar.outputs.version }}
+      quality: ${{ steps.bundle_tar.outputs.quality }}
     steps:   
       - uses: actions/checkout@v2
         with:
@@ -196,6 +198,7 @@ jobs:
           yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
           
       - name: Bundle tarfile
+        id: bundle_tar
         run: |
           set -e
           version=$(node -p -e "require('./openvscode-server/package.json').version")
@@ -203,7 +206,10 @@ jobs:
           name="openvscode-server${quality_name}-v${version}-linux-${{ matrix.vscode_arch }}"
           mv vscode-reh-web-linux-${{ matrix.vscode_arch }} ${name}
           tar -czf ${name}.tar.gz ${name}
-          echo "VERSION=${version}" >> $GITHUB_ENV
+
+          echo "::set-output name=release_commit::${RELEASE_COMMIT}"
+          echo "::set-output name=version::${version}"
+          echo "::set-output name=quality::${QUALITY}"
       
       - name: Upload build artifact
         uses: actions/upload-artifact@v2
@@ -223,20 +229,20 @@ jobs:
     if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
     uses: ./.github/workflows/github-release.yml
     with:
-      release_commit: ${{ env.RELEASE_COMMIT }}
-      version: ${{ env.VERSION }}
-      stable: ${{ env.QUALITY == 'stable' }}
+      release_commit: ${{ needs.build.outputs.release_commit }}
+      version: ${{ needs.build.outputs.version }}
+      stable: ${{ needs.build.outputs.quality == 'stable' }}
     secrets:
       VSCODE_GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
   docker-release:
-    needs: github-release
+    needs: [github-release, build]
     if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
     uses: ./.github/workflows/docker-release.yml
     with:
-      version: ${{ env.VERSION }}
-      stable: ${{ env.QUALITY == 'stable' }}
+      version: ${{ needs.build.outputs.version }}
+      stable: ${{ needs.build.outputs.quality == 'stable' }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
