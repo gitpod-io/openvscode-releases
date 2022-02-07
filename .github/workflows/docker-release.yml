@@ -51,35 +51,29 @@ jobs:
             type=semver,pattern={{version}},value=v${{ inputs.version }},enable=${{ inputs.stable == true }}
             type=raw,value=insiders,enable=${{ inputs.stable == false }}
             type=raw,value=nightly,enable=${{ inputs.stable == false }}
-      
-      - name: Test echo
-        run: |
-          set -e
-          echo "${{ env.RELEASE_TAG }}"
-          echo "${{ steps.meta.outputs.tags }}"
 
-      # - name: Login to DockerHub
-      #   uses: docker/login-action@v1
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      # - name: Build and push
-      #   uses: docker/build-push-action@v2
-      #   with:
-      #     push: true
-      #     context: .
-      #     platforms: |
-      #       linux/amd64
-      #       linux/arm64
-      #       linux/arm/v7
-      #     build-args: |
-      #       RELEASE_TAG=${{ env.RELEASE_TAG }}
-      #     tags: ${{ steps.meta.outputs.tags }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: .
+          platforms: |
+            linux/amd64
+            linux/arm64
+            linux/arm/v7
+          build-args: |
+            RELEASE_TAG=${{ env.RELEASE_TAG }}
+          tags: ${{ steps.meta.outputs.tags }}
 
-      # - name: Slack Notification
-      #   if: always()
-      #   uses: rtCamp/action-slack-notify@v2
-      #   env:
-      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      #     SLACK_COLOR: ${{ job.status }}
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
