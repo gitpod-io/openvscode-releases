@@ -1,0 +1,74 @@
+name: Github Release
+on:
+  workflow_call:
+    inputs:
+      release_commit:
+        description: 'OpenVSCode Server release commit'
+        type: string
+        required: true
+      version:
+        description: 'OpenVSCode Server version'
+        type: string
+        required: true
+      stable:
+        description: 'Stable or insiders release'
+        type: boolean
+        required: true
+    secrets:
+      VSCODE_GITHUB_TOKEN:
+        required: true
+      SLACK_WEBHOOK:
+        required: true
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+    name: Publish Github Release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts/
+
+      - name: Create stable release
+        if: inputs.stable == true
+        uses: softprops/action-gh-release@v1
+        with:
+          repository: ${{ github.repository_owner }}/openvscode-server
+          target_commitish: ${{ inputs.release_commit }}
+          body: OpenVSCode Server v${{ inputs.version }}
+          tag_name: openvscode-server-v${{ inputs.version }}
+          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+          files: artifacts/**/openvscode-server-*.tar.gz
+
+      - name: Delete previous insiders release
+        if: inputs.stable == false
+        uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          repo: ${{ github.repository_owner }}/openvscode-server
+          keep_latest: 0
+          delete_tags: true
+          delete_tag_pattern: openvscode-server-insiders
+        env:
+          GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      - name: Sleep
+        if: inputs.stable == false
+        run: sleep 30s
+      - name: Create Insiders release
+        if: inputs.stable == false
+        uses: softprops/action-gh-release@v1
+        with:
+          repository: ${{ github.repository_owner }}/openvscode-server
+          target_commitish: ${{ inputs.release_commit }}
+          body: OpenVSCode Server Insiders v${{ inputs.version }}
+          tag_name: openvscode-server-insiders-v${{ inputs.version }}
+          prerelease: true
+          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+          files: artifacts/**/openvscode-server-*.tar.gz
+
+      - name: Slack Notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
