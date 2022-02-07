@@ -16,8 +16,7 @@ on:
       uploadRelease:
         description: 'Create GitHub and DockerHub Release'
         type: boolean
-        required: false
-        default: "false"
+        required: true
   workflow_run:
     workflows: ["Insiders"]
     types: [completed]
