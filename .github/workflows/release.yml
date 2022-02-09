@@ -145,7 +145,6 @@ jobs:
           set -e
           export npm_config_arch=${{ matrix.npm_arch }}
           yarn --frozen-lockfile --network-timeout 180000
-          yarn --cwd remote/web --frozen-lockfile --network-timeout 180000
       
       - name: Download server build dependencies
         if: matrix.vscode_arch == 'x64'
