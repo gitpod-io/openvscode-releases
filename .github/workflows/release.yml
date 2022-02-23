@@ -193,7 +193,7 @@ jobs:
         run: |
           set -e
           VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage"
           
       - name: Bundle tarfile
         id: bundle_tar
