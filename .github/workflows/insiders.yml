@@ -99,7 +99,7 @@ jobs:
       - name: Run smoke tests
         id: runSmokeTests
         run: |
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage"
 
       - name: Push changes
         run: |
