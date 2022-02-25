@@ -121,8 +121,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "openvscode-server/**/node_modules"
-          key: linux-${{ matrix.npm_arch }}-cacheNodeModules19-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: linux-${{ matrix.npm_arch }}-cacheNodeModules19-
+          key: linux-${{ matrix.npm_arch }}-cacheNodeModules20-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-${{ matrix.npm_arch }}-cacheNodeModules20-
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
