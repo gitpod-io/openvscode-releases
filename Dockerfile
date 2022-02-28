@@ -2,6 +2,7 @@ FROM ubuntu:18.04
 
 RUN apt update && \
     apt install -y git wget sudo && \
+    apt install libatomic1 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/
