@@ -107,7 +107,7 @@ jobs:
 
       - uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: 14
       
       - name: Install Yarn
         run: npm install -g yarn
@@ -121,8 +121,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "openvscode-server/**/node_modules"
-          key: linux-${{ matrix.npm_arch }}-cacheNodeModules20-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: linux-${{ matrix.npm_arch }}-cacheNodeModules20-
+          key: linux-${{ matrix.npm_arch }}-cacheNodeModules21-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-${{ matrix.npm_arch }}-cacheNodeModules21-
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
