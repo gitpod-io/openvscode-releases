@@ -1,4 +1,4 @@
-name: Publish to GitHub releases
+name: Release
 on:
   workflow_dispatch:
     inputs:
@@ -6,13 +6,17 @@ on:
         description: 'Commit to release'
         required: true
       quality:
-        description: 'Quality: insiders or stable'
+        description: 'Quality'
         required: true
+        type: choice
+        options: 
+        - insiders
+        - stable
         default: stable
       uploadRelease:
         description: 'Create GitHub and DockerHub Release'
-        required: false
-        default: "false"
+        type: boolean
+        required: true
   workflow_run:
     workflows: ["Insiders"]
     types: [completed]
@@ -22,17 +26,14 @@ env:
   RELEASE_COMMIT: ${{ github.event.inputs.commit || 'main' }}
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        # os: [ubuntu-18.04, macos-11, windows-latest]
-        # support only ubuntu for now
-        os: [ubuntu-18.04]
-    runs-on: ${{ matrix.os }}
-    name: Build on ${{ matrix.os }}      
+  build-dependencies:
+    runs-on: ubuntu-latest
+    container:
+      image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
+    name: Build native dependencies linux-x64
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
-    steps:  
-        # Get the release commit from the Insiders workflow
+    steps:
+      # Get the release commit from the Insiders workflow
       - name: Download artifact
         if: github.event.workflow_run.conclusion == 'success'
         uses: dawidd6/action-download-artifact@v2
@@ -43,28 +44,74 @@ jobs:
         if: github.event.workflow_run.conclusion == 'success'
         run: |
           echo "RELEASE_COMMIT=$(cat __release_commit.txt)" >> $GITHUB_ENV
-      
+
       - uses: actions/checkout@v2
         with:
-          repository: gitpod-io/openvscode-server
+          repository: ${{ github.repository_owner }}/openvscode-server
+          ref: ${{ env.RELEASE_COMMIT }}
+          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      
+      - name: Execute yarn
+        run: |
+          set -e
+          export npm_config_arch=x64
+          yarn --cwd remote --frozen-lockfile --network-timeout 180000
+      
+      - name: Compress node_modules output
+        run: |
+          set -e
+          tar -cz --ignore-failed-read -f reh_node_modules-x64.tar.gz -C ./remote node_modules
+
+      - name: Updaload compiled dependencies
+        uses: actions/upload-artifact@v2
+        with:
+          name: reh_node_modules-x64
+          path: reh_node_modules-x64.tar.gz
+
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+      env:
+        OS_NAME: 'linux'
+        VSCODE_ARCH: ${{ matrix.vscode_arch }}
+
+    # support only linux for now
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - vscode_arch: x64
+          npm_arch: x64
+          image: gitpod/openvscode-server-linux-build-agent:bionic-x64
+        - vscode_arch: arm64
+          npm_arch: arm64
+          image: gitpod/openvscode-server-linux-build-agent:stretch-arm64
+        - vscode_arch: armhf
+          npm_arch: armv7l
+          image: gitpod/openvscode-server-linux-build-agent:stretch-armhf
+
+    name: Build linux-${{ matrix.vscode_arch }}
+    needs: build-dependencies
+    outputs:
+      release_commit: ${{ steps.bundle_tar.outputs.release_commit }}
+      version: ${{ steps.bundle_tar.outputs.version }}
+      quality: ${{ steps.bundle_tar.outputs.quality }}
+    steps:   
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{ github.repository_owner }}/openvscode-server
           ref: ${{ env.RELEASE_COMMIT }}
           path: openvscode-server
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-
-      - name: Setup Build Environment
-        working-directory: ./openvscode-server
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libxkbfile-dev pkg-config libsecret-1-dev libxss1 dbus xvfb libgtk-3-0 libgbm1
-          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
-          sudo chmod +x /etc/init.d/xvfb
-          sudo update-rc.d xvfb defaults
-          sudo service xvfb start
 
       - uses: actions/setup-node@v2
         with:
           node-version: 14
       
+      - name: Install Yarn
+        run: npm install -g yarn
+    
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
@@ -74,8 +121,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "openvscode-server/**/node_modules"
-          key: ${{ runner.os }}-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-cacheNodeModules14-
+          key: linux-${{ matrix.npm_arch }}-cacheNodeModules21-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-${{ matrix.npm_arch }}-cacheNodeModules21-
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
@@ -86,26 +133,46 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-yarnCacheDir-
+          key: linux-${{ matrix.npm_arch }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: linux-${{ matrix.npm_arch }}-yarnCacheDir-
       - name: Execute yarn
         working-directory: ./openvscode-server
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
-        run: yarn --frozen-lockfile --network-timeout 180000
+        run: |
+          set -e
+          export npm_config_arch=${{ matrix.npm_arch }}
+          yarn --frozen-lockfile --network-timeout 180000
       
+      - name: Download server build dependencies
+        if: matrix.vscode_arch == 'x64'
+        uses: actions/download-artifact@v2
+        with:
+          name: reh_node_modules-x64
+          path: ./openvscode-server
+      
+      - name: Extract server node_modules output
+        if: matrix.vscode_arch == 'x64'
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          rm -rf remote/node_modules
+          tar -xzf reh_node_modules-x64.tar.gz --directory ./remote
+
       - name: Prepare for distribution
         working-directory: ./openvscode-server
-        run: yarn gulp vscode-reh-web-linux-x64-min
+        run: yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
       
       - name: Download playwright
+        if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
         run: |
           yarn playwright-install 
 
       - name: Compile test suites
+        if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
         run: |
           set -e
@@ -113,65 +180,40 @@ jobs:
           yarn --cwd test/integration/browser compile
 
       - name: Run integration tests
+        if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-x64" \
-          ./resources/server/test/test-web-integration.sh --browser chromium
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
+          ./scripts/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
+        if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
         run: |
           set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-x64" \
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
-      
-      - name: Determine archive filename
-        uses: haya14busa/action-cond@v1
-        id: archive
-        with:
-          cond: ${{ runner.os == 'Windows' }}
-          if_true: 'zip'
-          if_false: 'tar.gz'
-      
-      - name: Set environment variables (Linux & macOS)
-        if: runner.os != 'Windows'
-        run: |
-          echo "EXTENSION=${{ steps.archive.outputs.value }}" >> $GITHUB_ENV
-          echo "VERSION=$(node -p -e "require('./openvscode-server/package.json').version")" >> $GITHUB_ENV
-      
-      - name: Set archive file name (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          chcp 65001
-          echo ("ARCHIVE_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64") >> $env:GITHUB_ENV
-          echo ("ARCHIVE_FULL_NAME=openvscode-server-v" + $(node -p -e "require('./openvscode-server/package.json').version")+"-"+ $("${{ runner.os }}".tolower())+"-x64.${{ steps.archive.outputs.value }}") >> $env:GITHUB_ENV
-      - name: Set archive file name
-        run: |
-          os_name=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')
-          quality_name=$([ "$QUALITY" == "insiders" ] && echo "-insiders" || echo "")
-          name="openvscode-server${quality_name}-v${VERSION}-${os_name}-x64"
-          echo "ARCHIVE_NAME=$name" >> $GITHUB_ENV
-          echo "ARCHIVE_FULL_NAME=$name.$EXTENSION" >> $GITHUB_ENV
-      
-      - name: Rename the bundle file
-        run: |
-          mv vscode-reh-web-linux-x64/ ${{ env.ARCHIVE_NAME }}/
-      
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
+          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage"
+          
       - name: Bundle tarfile
-        if: runner.os != 'Windows'
+        id: bundle_tar
         run: |
-          sudo tar cfzv ${{ env.ARCHIVE_FULL_NAME }} ${{ env.ARCHIVE_NAME }}/ > /dev/null
-      - name: Bundle zip
-        if: runner.os == 'Windows'
-        run: |
-          Compress-Archive -Path ${{ env.ARCHIVE_NAME }}\* -CompressionLevel Optimal -DestinationPath ${{ env.ARCHIVE_FULL_NAME }}
+          set -e
+          version=$(node -p -e "require('./openvscode-server/package.json').version")
+          quality_name=$([ "$QUALITY" = "insiders" ] && echo "-insiders" || echo "")
+          name="openvscode-server${quality_name}-v${version}-linux-${{ matrix.vscode_arch }}"
+          mv vscode-reh-web-linux-${{ matrix.vscode_arch }} ${name}
+          tar -czf ${name}.tar.gz ${name}
+
+          echo "::set-output name=release_commit::${RELEASE_COMMIT}"
+          echo "::set-output name=version::${version}"
+          echo "::set-output name=quality::${QUALITY}"
       
-      - name: Archive sanity check
+      - name: Upload build artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ runner.os }}-x64
-          path: ${{ env.ARCHIVE_FULL_NAME }}
+          name: linux-${{ matrix.vscode_arch }}
+          path: openvscode-server-*.tar.gz
 
       - name: Slack Notification
         if: always()
@@ -179,113 +221,28 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
-  
-  upload:
+   
+  github-release:
     needs: build 
-    runs-on: ubuntu-latest
-    name: Create the release
     if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: outputs/
-      
-      - run: |
-          echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
-      
-      - name: Create stable release
-        if: env.QUALITY == 'stable'
-        uses: softprops/action-gh-release@v1
-        with:
-          repository: gitpod-io/openvscode-server
-          target_commitish: ${{ env.RELEASE_COMMIT }}
-          body: OpenVSCode Server v${{ env.VERSION }}
-          tag_name: openvscode-server-v${{ env.VERSION }}
-          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-          files: |
-            outputs/**/*.tar.gz
-            outputs/**/*.zip
+    uses: ./.github/workflows/github-release.yml
+    with:
+      release_commit: ${{ needs.build.outputs.release_commit }}
+      version: ${{ needs.build.outputs.version }}
+      stable: ${{ needs.build.outputs.quality == 'stable' }}
+    secrets:
+      VSCODE_GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
-      - name: Delete previous insiders release
-        if: env.QUALITY == 'insiders'
-        uses: dev-drprasad/delete-older-releases@v0.2.0
-        with:
-          repo: gitpod-io/openvscode-server
-          keep_latest: 0
-          delete_tags: true
-          delete_tag_pattern: openvscode-server-insiders
-        env:
-          GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-      - name: Sleep
-        if: env.QUALITY == 'insiders'
-        run: sleep 30s
-      - name: Create Insiders release
-        if: env.QUALITY == 'insiders'
-        uses: softprops/action-gh-release@v1
-        with:
-          repository: gitpod-io/openvscode-server
-          target_commitish: ${{ env.RELEASE_COMMIT }}
-          body: OpenVSCode Server Insiders v${{ env.VERSION }}
-          tag_name: openvscode-server-insiders-v${{ env.VERSION }}
-          prerelease: true
-          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-          files: |
-            outputs/**/*.tar.gz
-            outputs/**/*.zip
+  docker-release:
+    needs: [github-release, build]
+    if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
+    uses: ./.github/workflows/docker-release.yml
+    with:
+      version: ${{ needs.build.outputs.version }}
+      stable: ${{ needs.build.outputs.quality == 'stable' }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
-      - name: Slack Notification
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
-  
-  docker:
-    needs: upload
-    runs-on: ubuntu-latest
-    name: Build and publish Docker image
-    steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-      
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v2
-        with:
-          path: outputs/
-      
-      - name: Set server version
-        run: |
-          echo "RELEASE_TAG=$(ls outputs/Linux-x64 | sed -nre 's/^(.*)-linux-x64.tar.gz/\1/p')" >> $GITHUB_ENV
-          echo "VERSION=$(ls outputs/Linux-x64 | sed -nre 's/^[^0-9]*(([0-9]+\.)*[0-9]+).*/\1/p')" >> $GITHUB_ENV
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: |
-            gitpod/openvscode-server
-          tags: |
-            type=semver,pattern={{version}},value=v${{ env.VERSION }},enable=${{ env.QUALITY == 'stable' }}
-            type=raw,value=insiders,enable=${{ env.QUALITY == 'insiders' }}
-            type=raw,value=nightly,enable=${{ env.QUALITY == 'insiders' }}
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          build-args: RELEASE_TAG=${{ env.RELEASE_TAG }}
-          tags: ${{ steps.meta.outputs.tags }}
-
-      - name: Slack Notification
-        if: always()
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}

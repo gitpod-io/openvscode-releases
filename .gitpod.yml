@@ -1,2 +1,0 @@
-tasks:
-- command: curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash # Install act to debug the GH Action locally

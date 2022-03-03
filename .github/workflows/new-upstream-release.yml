@@ -1,0 +1,171 @@
+name: Notify new upstream release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0/12 * * 1-5"
+
+jobs:
+  notify-new-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - run: npm init --yes
+      - run: npm install semver
+
+      - name: Check for new release branch
+        id: new-release
+        uses: actions/github-script@v5
+        with:
+          result-encoding: string
+          script: |
+            const semver = require('semver');
+
+            let nextRelease = undefined;
+            try {
+              const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+                owner: 'microsoft',
+                repo: 'vscode'
+              });
+
+              const releaseTag = latestRelease.tag_name;
+              const nextReleaseTag = semver.inc(releaseTag, 'minor');
+              nextRelease = `release/${semver.major(nextReleaseTag)}.${semver.minor(nextReleaseTag)}`;
+              console.log(nextRelease);
+            } catch (e) {
+              console.error(e);
+              return false;
+            }
+
+            let upstreamReleaseBranch = undefined;
+            try {
+              const response = await github.rest.repos.getBranch({
+                owner: 'microsoft',
+                repo: 'vscode',
+                branch: nextRelease
+              });
+              upstreamReleaseBranch = response.data;
+              console.log(upstreamReleaseBranch);
+            } catch (e) {
+              console.error(e);
+              return false;
+            }
+
+            let releaseBranch = undefined;
+            try {
+              const response = await github.rest.repos.getBranch({
+                owner: 'gitpod-io',
+                repo: 'openvscode-server',
+                branch: nextRelease
+              });
+              releaseBranch = response.data;
+            } catch (e) {
+              console.log(e);
+            }
+
+            // If we already created the release branch in openvscode-server, don't create a notification
+            return releaseBranch ? false : true;
+
+      - name: Slack Notification
+        if: steps.new-release.outputs.result == 'true'
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: New vscode release branch created
+          SLACK_MESSAGE: 'Start preparing for a new release :exclamation:'
+
+  notify-recovery-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - run: npm init --yes
+      - run: npm install semver
+
+      - name: Check for recovery release commits
+        id: new-release
+        uses: actions/github-script@v5
+        with:
+          result-encoding: string
+          script: |
+            const semver = require('semver');
+
+            let currentRelease = undefined;
+            try {
+              const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+                owner: 'microsoft',
+                repo: 'vscode'
+              });
+
+              const releaseTag = latestRelease.tag_name;
+              currentRelease = `release/${semver.major(releaseTag)}.${semver.minor(releaseTag)}`;
+              console.log(currentRelease);
+            } catch (e) {
+              console.error(e);
+              return false;
+            }
+
+            let lastSyncCommit = undefined;
+            try {
+              // Look for the last sync commit from upstream. For now just query it once
+              // as it's unlikely that we are more than 100 commits ahead of upstream
+              const response = await github.rest.repos.listCommits({
+                owner: 'gitpod-io',
+                repo: 'openvscode-server',
+                sha: currentRelease,
+                per_page: 100,
+                page: 1
+              });
+
+              const commitsArr = response.data;
+              const initialCommitIdx = commitsArr.findIndex(commitData => {
+                return commitData.commit.message === 'code web server initial commit';
+              });
+              lastSyncCommit = initialCommitIdx >= 0 ? commitsArr[initialCommitIdx + 1] : undefined;
+              console.log(lastSyncCommit.html_url);
+            } catch (e) {
+              console.error(e);
+              return false;
+            }
+
+            if(!lastSyncCommit) {
+              return false;
+            }
+
+            let newCommits = [];
+            try {
+              const response = await github.rest.repos.listCommits({
+                owner: 'microsoft',
+                repo: 'vscode',
+                sha: currentRelease,
+                per_page: 100,
+                page: 1
+              });
+
+              const commitsArr = response.data;
+              const lastSyncCommitIdx = commitsArr.findIndex(commitData => {
+                return commitData.sha === lastSyncCommit.sha;
+              });
+
+              if (lastSyncCommitIdx > 0) {
+                newCommits = commitsArr.slice(0, lastSyncCommitIdx).map(commitData => commitData.html_url);
+                console.log(newCommits);
+              }
+            } catch (e) {
+              console.log(e);
+              return false;
+            }
+
+            return newCommits.length > 0 ? true : false;
+
+      - name: Slack Notification
+        if: steps.new-release.outputs.result == 'true'
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: New commits on latest release branch
+          SLACK_MESSAGE: 'Start preparing for a new recovery release :exclamation:'

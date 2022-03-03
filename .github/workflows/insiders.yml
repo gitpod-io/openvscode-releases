@@ -11,12 +11,12 @@ on:
         required: true
         default: "main"
   schedule:
-    - cron: "0 18 * * 1-5"
+    - cron: "0 23 * * 1-5"
 
 env:
   # Default values will be used by cron job
-  PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/release/1.62' }}
-  UPDATE_BRANCH: ${{ github.event.inputs.update_branch || 'release/1.62' }}
+  PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/release/1.65' }}
+  UPDATE_BRANCH: ${{ github.event.inputs.update_branch || 'release/1.65' }}
 
 jobs:
   sync-main:
@@ -61,8 +61,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: "**/node_modules"
-          key: ${{ runner.os }}-cacheNodeModules14-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-cacheNodeModules14-
+          key: ${{ runner.os }}-cacheNodeModules21-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-cacheNodeModules21-
       - name: Get yarn cache directory path
         id: yarnCacheDirPath
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
@@ -94,12 +94,12 @@ jobs:
       - name: Run integration tests
         id: runIntegrationTests
         run: |
-          ./resources/server/test/test-web-integration.sh --browser chromium
+          ./scripts/test-web-integration.sh --browser chromium
 
       - name: Run smoke tests
         id: runSmokeTests
         run: |
-          yarn smoketest --web --headless --electronArgs="--disable-dev-shm-usage --use-gl=swiftshader"
+          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage"
 
       - name: Push changes
         run: |
