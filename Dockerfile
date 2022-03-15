@@ -56,8 +56,7 @@ ENV LANG=C.UTF-8 \
     EDITOR=code \
     VISUAL=code \
     GIT_EDITOR="code --wait" \
-    OPENVSCODE_SERVER_ROOT=${OPENVSCODE_SERVER_ROOT} \
-    PATH="${OPENVSCODE_SERVER_ROOT}/bin/remote-cli:${PATH}"
+    OPENVSCODE_SERVER_ROOT=${OPENVSCODE_SERVER_ROOT}
 
 # Default exposed port if none is specified
 EXPOSE 3000
