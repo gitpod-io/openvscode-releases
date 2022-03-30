@@ -62,7 +62,7 @@ jobs:
           set -e
           tar -cz --ignore-failed-read -f reh_node_modules-x64.tar.gz -C ./remote node_modules
 
-      - name: Updaload compiled dependencies
+      - name: Upload compiled dependencies
         uses: actions/upload-artifact@v2
         with:
           name: reh_node_modules-x64
