@@ -171,7 +171,7 @@ jobs:
             nameShort="$nameShort - Insiders"
             nameLong="$nameLong - Insiders"
           fi
-          setQuality="setpath([\"quality\"]; \"$CODE_QUALITY\")"
+          setQuality="setpath([\"quality\"]; \"$QUALITY\")"
           setNameShort="setpath([\"nameShort\"]; \"$nameShort\")"
           setNameLong="setpath([\"nameLong\"]; \"$nameLong\")"
           jqCommands="${setQuality} | ${setNameShort} | ${setNameLong}"
