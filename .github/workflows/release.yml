@@ -190,6 +190,19 @@ jobs:
         run: |
           yarn playwright-install
 
+      - name: Build integration tests
+        if: matrix.vscode_arch == 'x64'
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          yarn gulp	compile-extension:vscode-api-tests \
+            compile-extension:markdown-language-features \
+            compile-extension:typescript-language-features \
+            compile-extension:emmet \
+            compile-extension:git \
+            compile-extension:ipynb \
+            compile-extension-media
+
       - name: Compile test suites
         if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
