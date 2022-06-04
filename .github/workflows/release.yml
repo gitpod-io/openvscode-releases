@@ -12,7 +12,7 @@ on:
         options:
         - insider
         - stable
-        default: stable
+        default: insider
       uploadRelease:
         description: 'Create GitHub and DockerHub Release'
         type: boolean
@@ -45,7 +45,7 @@ jobs:
         run: |
           echo "RELEASE_COMMIT=$(cat __release_commit.txt)" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: ${{ github.repository_owner }}/openvscode-server
           ref: ${{ env.RELEASE_COMMIT }}
@@ -63,7 +63,7 @@ jobs:
           tar -cz --ignore-failed-read -f reh_node_modules-x64.tar.gz -C ./remote node_modules
 
       - name: Upload compiled dependencies
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: reh_node_modules-x64
           path: reh_node_modules-x64.tar.gz
@@ -98,14 +98,14 @@ jobs:
       version: ${{ steps.bundle_tar.outputs.version }}
       quality: ${{ steps.bundle_tar.outputs.quality }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: ${{ github.repository_owner }}/openvscode-server
           ref: ${{ env.RELEASE_COMMIT }}
           path: openvscode-server
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
 
@@ -118,7 +118,7 @@ jobs:
         run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)"
       - name: Cache node modules
         id: cacheNodeModules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: "openvscode-server/**/node_modules"
           key: linux-${{ matrix.npm_arch }}-cacheNodeModules22-${{ steps.nodeModulesCacheKey.outputs.value }}
@@ -130,7 +130,7 @@ jobs:
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Cache yarn directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.yarnCacheDirPath.outputs.dir }}
           key: linux-${{ matrix.npm_arch }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
@@ -148,7 +148,7 @@ jobs:
 
       - name: Download server build dependencies
         if: matrix.vscode_arch == 'x64'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: reh_node_modules-x64
           path: ./openvscode-server
@@ -242,7 +242,7 @@ jobs:
           echo "::set-output name=quality::${QUALITY}"
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: linux-${{ matrix.vscode_arch }}
           path: openvscode-server-*.tar.gz

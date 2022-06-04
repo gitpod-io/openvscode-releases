@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     # timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: "gitpod-io/openvscode-server"
           ref: ${{ env.UPDATE_BRANCH }}
@@ -45,7 +45,7 @@ jobs:
           sudo update-rc.d xvfb defaults
           sudo service xvfb start
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
 
@@ -58,7 +58,7 @@ jobs:
         run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)"
       - name: Cache node modules
         id: cacheNodeModules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-cacheNodeModules22-${{ steps.nodeModulesCacheKey.outputs.value }}
@@ -69,7 +69,7 @@ jobs:
         run: echo "::set-output name=dir::$(yarn cache dir)"
       - name: Cache yarn directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ steps.yarnCacheDirPath.outputs.dir }}
           key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
@@ -95,7 +95,7 @@ jobs:
           echo "$(git rev-parse ${{ env.PARENT_COMMIT }})" > __upstream_commit.txt
       - name: Upload parent commit file
         if: ${{ success() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: upstream_commit
           path: __upstream_commit.txt

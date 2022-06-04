@@ -8,7 +8,7 @@ jobs:
   notify-new-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
       - run: npm init --yes
@@ -16,7 +16,7 @@ jobs:
 
       - name: Check for new release branch
         id: new-release
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           result-encoding: string
           script: |
@@ -79,7 +79,7 @@ jobs:
   notify-recovery-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 16
       - run: npm init --yes
@@ -87,7 +87,7 @@ jobs:
 
       - name: Check for recovery release commits
         id: new-release
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           result-encoding: string
           script: |
