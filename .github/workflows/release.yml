@@ -182,7 +182,17 @@ jobs:
 
       - name: Prepare for distribution
         working-directory: ./openvscode-server
-        run: yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
+        run: |
+          set -e
+          base_commit_msg="code web server initial commit"
+          upstream_commit=$(git log --pretty="%H" --max-count=1 --grep "$base_commit_msg")
+          if [ -z $upstream_commit ]; then
+            echo "Could not find base commit"
+            exit 1
+          fi
+          
+          VSCODE_DISTRO_COMMIT=$(git rev-parse "${upstream_commit}"~) \
+          yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
 
       - name: Download playwright
         if: matrix.vscode_arch == 'x64'
