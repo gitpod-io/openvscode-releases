@@ -49,6 +49,7 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/openvscode-server
           ref: ${{ env.RELEASE_COMMIT }}
+          fetch-depth: 0
           token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
 
       - name: Execute yarn
@@ -185,12 +186,13 @@ jobs:
         run: |
           set -e
           base_commit_msg="code web server initial commit"
-          upstream_commit=$(git log --pretty="%H" --max-count=1 --grep "$base_commit_msg")
-          if [ -z $upstream_commit ]; then
+          upstream_commit=$(git log --pretty="%H" --max-count=1 --grep "${base_commit_msg}")
+          echo "$upstream_commit"
+          if [ -z "$upstream_commit" ]; then
             echo "Could not find base commit"
             exit 1
           fi
-          
+
           VSCODE_DISTRO_COMMIT=$(git rev-parse "${upstream_commit}"~) \
           yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
 
