@@ -20,6 +20,7 @@ const getNextReleaseTag = async () => {
 }
 
 const nextTag = process.env.NEXT_TAG || await getNextReleaseTag();
+let branchExists = false;
 
 try {
     const branch = `release/${major(nextTag)}.${minor(nextTag)}`;
@@ -28,6 +29,8 @@ try {
         repo: 'vscode',
         branch,
     });
+    branchExists = true;
+    console.info(`A release for ${nextTag} branch does exist already. Changing files...`, e);
     replaceInFile('.github/workflows/insiders-gp.yml', (object) => {
         object = object.replace("'upstream/main'", `'upstream/${branch}'`);
         object = object.replace("'gp-code/main'", `'gp-code/${branch}'`);
@@ -39,7 +42,7 @@ try {
         return object;
     });
 } catch (e) {
-    console.info(`A release for ${nextTag} branch does not exist. Reverting to main.`, e);
+    console.info(`A release for ${nextTag} branch does not exist. Reverting to main.`);
     replaceInFile('.github/workflows/insiders-gp.yml', (object) => {
         object = object.replace(/'upstream\/release\/.{1,5}'/i, "'upstream/main'");
         object = object.replace(/'gp-code\/release\/.{1,5}'/i, "'gp-code/main'");
@@ -50,4 +53,19 @@ try {
         object = object.replace(/'release\/.{1,5}'/i, "'main'");
         return object;
     });
+}
+
+// Change the values in the gitpod-io/gitpod repository
+
+if (!fs.existsSync('/tmp/gitpod/.github/workflows/')) {
+    console.error('Could not find gitpod repo under /tmp/gitpod. Please clone it in that location.')
+    process.exit();
+}
+
+if (branchExists) {
+    replaceInFile('/tmp/gitpod/.github/workflows/code-nightly.yaml', (object) =>
+        object.replace(/https:\/\/api.github.com\/repos\/gitpod-io\/openvscode-server\/commits\/gp-code\/release\/.{1,5}/i, 'https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/main'))
+} else {
+    replaceInFile('/tmp/gitpod/.github/workflows/code-nightly.yaml', (object) =>
+        object.replace('https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/main', `https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/release/${nextTag}`))
 }
