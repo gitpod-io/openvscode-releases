@@ -1,0 +1,31 @@
+name: Switch workflow branches
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to check'
+        required: false
+
+env:
+  NEXT_TAG: ${{ github.event.inputs.version }}
+
+jobs:
+  branch-switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: npm i
+      - name: Run the branch switch-a-roo
+        run:  node utils/switchBranch.js
+      - name: Create PR
+        uses: technote-space/create-pr-action@v2
+        with:
+          COMMIT_MESSAGE: 'Update release branch'
+          COMMIT_NAME: 'Robo Quat'
+          COMMIT_EMAIL: 'roboquat@users.noreply.github.com'
+          PR_BRANCH_NAME: 'update-branches'
+          PR_TITLE: 'Update workflow branches'
