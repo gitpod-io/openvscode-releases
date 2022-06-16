@@ -14,6 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          path: '/tmp/gitpod/'
+          repository: 'gitpod-io/gitpod'
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -21,11 +25,18 @@ jobs:
         run: npm i
       - name: Run the branch switch-a-roo
         run: node utils/switchBranch.js
-      - name: Create PR
-        uses: technote-space/create-pr-action@v2
+      - name: Create Pull Request (openvscode-releases)
+        uses: peter-evans/create-pull-request@v4
         with:
-          COMMIT_MESSAGE: "Update release branch"
-          COMMIT_NAME: "Robo Quat"
-          COMMIT_EMAIL: "roboquat@users.noreply.github.com"
-          PR_BRANCH_NAME: "update-branches"
-          PR_TITLE: "Update workflow branches"
+          commit-message: "Update release branch"
+          branch: "update-branches"
+          delete-branch: true
+          title: "Update workflow branches"
+      - name: Create Pull Request (gitpod)
+        uses: peter-evans/create-pull-request@v4
+        with:
+          path: /tmp/gitpod/
+          commit-message: "code: Update Nightly"
+          branch: "code-update-nightly"
+          delete-branch: true
+          title: "code: Update Nightly"
