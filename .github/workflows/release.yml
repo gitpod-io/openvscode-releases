@@ -208,7 +208,9 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          yarn gulp compile-extension:vscode-api-tests \
+          yarn gulp \
+            compile-extension:configuration-editing \
+            compile-extension:vscode-api-tests \
             compile-extension:markdown-language-features \
             compile-extension:typescript-language-features \
             compile-extension:emmet \
