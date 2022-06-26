@@ -25,9 +25,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            import semver from 'semver';
-            const { inc, major, minor } = semver;
-            import fs from 'fs';
+            const { inc, major, minor } =  require('semver');
+            const fs =  require('fs');
 
             const replaceInFile = (file, transform) => {
                 const text = fs.readFileSync(file, 'utf8');
