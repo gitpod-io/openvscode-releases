@@ -5,12 +5,16 @@ on:
       version:
         description: "Version to check"
         required: false
+    workflow_run: 
+      workflows: [Notify new upstream release]
+      types: [completed]
 
 env:
   NEXT_TAG: ${{ github.event.inputs.version }}
 
 jobs:
   branch-switch:
+    if: ${{ github.event.workflow_run.conclusion != 'failure' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -92,18 +96,30 @@ jobs:
                 replaceInFile('/tmp/gitpod/.github/workflows/code-nightly.yaml', (object) =>
                     object.replace('https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/main', `https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/release/${nextTag}`))
             }
-      - name: Create Pull Request (openvscode-releases)
-        uses: peter-evans/create-pull-request@v4
+      - name: Commit changes (openvscode-releases)
+        uses: devops-infra/action-commit-push@master
         with:
-          commit-message: "Update release branch"
-          branch: "update-branches"
-          delete-branch: true
-          title: "Update workflow branches"
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          commit_prefix: "[AUTO]"
+          commit_message: "Update release branch"
+
       - name: Create Pull Request (gitpod)
         uses: peter-evans/create-pull-request@v4
+        id: gp-pr
         with:
           path: /tmp/gitpod/
           commit-message: "code: Update Nightly"
           branch: "code-update-nightly"
           delete-branch: true
           title: "code: Update Nightly"
+
+      - name: Set env
+        run: echo "COMMIT_SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: Began new VS Code Release
+          SLACK_MESSAGE: 'Updated openvscode-releases with [${{ env.COMMIT_SHA_SHORT }}](https://github.com/${{ github.repository_owner }}/gitpod/commit/${{ env.COMMIT_SHA_SHORT }}) and created [${{ steps.gp-pr.outputs.pull-request-number }}](${{ steps.gp-pr.outputs.pull-request-url }}) for updating `Code Nightly`.'
