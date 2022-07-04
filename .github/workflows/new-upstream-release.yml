@@ -2,7 +2,7 @@ name: Notify new upstream release
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0/12 * * 1-5"
+    - cron: "0 0/12 * * *"
 
 jobs:
   notify-new-release:
