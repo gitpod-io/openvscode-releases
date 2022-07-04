@@ -5,9 +5,15 @@ on:
       version:
         description: "Version to check"
         required: false
-    workflow_run: 
-      workflows: [Notify new upstream release]
-      types: [completed]
+  workflow_call:
+    inputs:
+      version:
+        description: 'The next VS Code version'
+        type: string
+        required: true
+    secrets:
+      SLACK_WEBHOOK:
+        required: true
 
 env:
   NEXT_TAG: ${{ github.event.inputs.version }}
