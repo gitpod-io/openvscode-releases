@@ -34,6 +34,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - run: npm init --yes
+      - run: npm install semver
+      
       - name: Run the branch switch-a-roo
         uses: actions/github-script@v6
         with:
