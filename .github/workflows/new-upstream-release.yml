@@ -86,7 +86,7 @@ jobs:
       - run: npm install semver
 
       - name: Check for recovery release commits
-        id: new-release
+        id: new-recovery-release
         uses: actions/github-script@v6
         with:
           result-encoding: string
@@ -162,22 +162,11 @@ jobs:
             return newCommits.length > 0 ? true : false;
 
       - name: Slack Notification
-        if: steps.new-release.outputs.result == 'true'
+        if: steps.new-recovery-release.outputs.result == 'true'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
           SLACK_TITLE: New commits on latest release branch
           SLACK_MESSAGE: 'Start preparing for a new recovery release :exclamation:'
-  switcher:
-    needs: 'notify-new-release'
-    if: steps.new-release.outputs.result == 'true'
-    name: Call the branch switcher
-    uses: ./.github/workflows/switch.yml
-    with:
-      release_commit: ${{ needs.build.outputs.release_commit }}
-      version: ${{ needs.build.outputs.version }}
-      stable: ${{ needs.build.outputs.quality == 'stable' }}
-    secrets:
-      VSCODE_GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+

@@ -5,22 +5,22 @@ on:
       version:
         description: "Version to check"
         required: false
-  workflow_call:
-    inputs:
-      version:
-        description: 'The next VS Code version'
-        type: string
-        required: true
-    secrets:
-      SLACK_WEBHOOK:
-        required: true
+  # workflow_call:
+  #   inputs:
+  #     version:
+  #       description: 'The next VS Code version'
+  #       type: string
+  #       required: true
+  #   secrets:
+  #     SLACK_WEBHOOK:
+  #       required: true
 
 env:
   NEXT_TAG: ${{ github.event.inputs.version }}
 
 jobs:
   branch-switch:
-    if: ${{ github.event.workflow_run.conclusion != 'failure' }}
+    # if: github.event.inputs.version ||  github.event.workflow_run.conclusion != 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
