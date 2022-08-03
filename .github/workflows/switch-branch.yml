@@ -24,10 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          path: openvscode-releases
       - uses: actions/checkout@v3
         with:
-          path: '/tmp/gitpod/'
-          repository: 'gitpod-io/gitpod'
+          path: gitpod
+          repository: gitpod-io/gitpod
+      
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -64,24 +67,24 @@ jobs:
                 });
                 branchExists = true;
                 console.info(`A release for ${nextTag} branch does exist already. Changing files...`, e);
-                replaceInFile('.github/workflows/insiders-gp.yml', (object) => {
+                replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace("'upstream/main'", `'upstream/${branch}'`);
                     object = object.replace("'gp-code/main'", `'gp-code/${branch}'`);
                     return object;
                 });
-                replaceInFile('.github/workflows/insiders.yml', (object) => {
+                replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders.yml', (object) => {
                     object = object.replace("'upstream/main'", `'upstream/${branch}'`);
                     object = object.replace("'main'", `'${branch}'`);
                     return object;
                 });
             } catch (e) {
                 console.info(`A release for ${nextTag} branch does not exist. Reverting to main.`);
-                replaceInFile('.github/workflows/insiders-gp.yml', (object) => {
+                replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace(/'upstream\/release\/.{1,5}'/i, "'upstream/main'");
                     object = object.replace(/'gp-code\/release\/.{1,5}'/i, "'gp-code/main'");
                     return object;
                 });
-                replaceInFile('.github/workflows/insiders.yml', (object) => {
+                replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders.yml', (object) => {
                     object = object.replace(/'upstream\/release\/.{1,5}'/i, "'upstream/main'");
                     object = object.replace(/'release\/.{1,5}'/i, "'main'");
                     return object;
@@ -90,16 +93,16 @@ jobs:
 
             // Change the values in the gitpod-io/gitpod repository
 
-            if (!fs.existsSync('/tmp/gitpod/.github/workflows/')) {
-                console.error('Could not find gitpod repo under /tmp/gitpod. Please clone it in that location.')
+            if (!fs.existsSync('${{ github.workspace }}/gitpod/.github/workflows/')) {
+                console.error('Could not find gitpod repo under ${{ github.workspace }}/gitpod. Please clone it in that location.')
                 process.exit();
             }
 
             if (branchExists) {
-                replaceInFile('/tmp/gitpod/.github/workflows/code-nightly.yaml', (object) =>
+                replaceInFile('${{ github.workspace }}/gitpod/.github/workflows/code-nightly.yaml', (object) =>
                     object.replace(/https:\/\/api.github.com\/repos\/gitpod-io\/openvscode-server\/commits\/gp-code\/release\/.{1,5}/i, 'https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/main'))
             } else {
-                replaceInFile('/tmp/gitpod/.github/workflows/code-nightly.yaml', (object) =>
+                replaceInFile('${{ github.workspace }}/gitpod/.github/workflows/code-nightly.yaml', (object) =>
                     object.replace('https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/main', `https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/release/${nextTag}`))
             }
       - name: Commit changes (openvscode-releases)
@@ -113,7 +116,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         id: gp-pr
         with:
-          path: /tmp/gitpod/
+          path: gitpod
           commit-message: "code: Update Nightly"
           branch: "code-update-nightly"
           delete-branch: true
