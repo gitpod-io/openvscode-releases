@@ -116,14 +116,14 @@ jobs:
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
-        run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)"
+        run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js ${{ matrix.vscode_arch }})"
       - name: Cache node modules
+        working-directory: ./openvscode-server
         id: cacheNodeModules
         uses: actions/cache@v3
         with:
-          path: "openvscode-server/**/node_modules"
-          key: linux-${{ matrix.npm_arch }}-cacheNodeModules23-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: linux-${{ matrix.npm_arch }}-cacheNodeModules23-
+          path: "**/node_modules"
+          key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
@@ -134,8 +134,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: linux-${{ matrix.npm_arch }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: linux-${{ matrix.npm_arch }}-yarnCacheDir-
+          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-yarnCacheDir-
       - name: Execute yarn
         working-directory: ./openvscode-server
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
