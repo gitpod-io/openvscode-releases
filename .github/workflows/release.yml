@@ -118,11 +118,10 @@ jobs:
         id: nodeModulesCacheKey
         run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js ${{ matrix.vscode_arch }})"
       - name: Cache node modules
-        working-directory: ./openvscode-server
         id: cacheNodeModules
         uses: actions/cache@v3
         with:
-          path: "**/node_modules"
+          path: "openvscode-server/**/node_modules"
           key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
       - name: Get yarn cache directory path
         working-directory: ./openvscode-server
