@@ -18,7 +18,7 @@ Update code to `1.x.x`
   - [ ] WebSockets and workers are properly proxied
      - [ ] diff editor should be operatable
      - [ ] trigger reconnection with `window.WebSocket.disconnectWorkspace()`, check that old WebSockets are closed and new opened of the same amount
-  - [ ] workspace specific commands should work, i.e. F1 → type `Gitpod` prefix
+  - [ ] workspace specific commands should work, i.e. F1 → type <kbd>Gitpod</kbd> prefix
   - [ ] that a PR view is preloaded when opening a PR URL
   - [ ] test `gp open` and `gp preview`
   - [ ] test open in VS Code Desktop, check `gp open` and `gp preview` in task/user terminals
