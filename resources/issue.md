@@ -17,13 +17,19 @@ Plan:
 	- [ ] https://github.com/gitpod-io/openvscode-releases/blob/1b60a53a1a34b61dfb41ca13b65bfbad4115bda4/.github/workflows/insiders-gp.yml#L19
     - [ ] https://github.com/gitpod-io/openvscode-releases/blob/1b60a53a1a34b61dfb41ca13b65bfbad4115bda4/.github/workflows/insiders.yml#L19
     - [ ] https://github.com/gitpod-io/gitpod/blob/4bdee21961c5390e1dc61606b7070af3b0f65971/.github/workflows/code-nightly.yaml#L34
-- [ ]  Create and merge PR in Gitpod repo to generate stable image for VS Code https://github.com/gitpod-io/gitpod/pull/9044
-    - Use [`insider.md`](insider.md) to create this PR
-- [ ]  Create and merge PR in Gitpod repo updating VS Code stable image tags to image generated in previous step 
-	- Update in https://github.com/gitpod-io/gitpod/blob/8ca6d2bb27a85688303c4991e0f43b882a14049b/install/installer/pkg/components/workspace/ide/constants.go#L9
-	- After updating the file, execute `cd install/installer/; make generateRenderTests`
-- [ ]  Deploy VS Code Insiders as stable
-- [ ]  Release [OpenVSCode Server](https://github.com/gitpod-io/openvscode-server)
 - [ ]  Port fixes from `release/[1.xx]` to `main` if any
-- [ ]  Switch nightly jobs in https://github.com/gitpod-io/openvscode-releases and Gitpod Code-Nightly GitHub actions to point back to `main` and `gp-code/main` branch
+- [ ]  Switch nightly jobs in https://github.com/gitpod-io/openvscode-releases and Gitpod Code-Nightly GitHub actions to point back to the `main` and `gp-code/main` branches
 - [ ]  Monitor for recovery releases and provide corresponding release in Gitpod and OpenVSCode if necessary
+
+## For each minor / patch release
+
+- [ ]  Create and merge a PR in https://github.com/gitpod-io/gitpod to generate a stable image for VS Code
+    - Update `codeCommit` inside of https://github.com/gitpod-io/gitpod/blob/main/WORKSPACE.yaml with the SHA of the tip of the `gp-code/release/{VERSION}` branch
+    - Use [`insider.md`](insider.md) as a PR template
+- [ ]  Create and merge PR in https://github.com/gitpod-io/gitpod updating VS Code stable image tags to the image generated in the previous step (the commit can be found in the resulting Werft job) 
+	- Update `CodeIDEImageStableVersion` in https://github.com/gitpod-io/gitpod/blob/main/install/installer/pkg/components/workspace/ide/constants.go
+	- After updating the file, execute `cd install/installer/; make generateRenderTests`
+    - Use [`stable.md`](stable.md) as a PR template
+- [ ]  Deploy VS Code Insiders as stable ([How to deploy](https://www.notion.so/gitpod/How-to-deploy-IDE-e66a8219add74f2090bfc08104f91445) in Notion)
+- [ ]  Release [OpenVSCode Server](https://github.com/gitpod-io/openvscode-server)
+
