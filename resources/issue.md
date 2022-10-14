@@ -23,8 +23,8 @@ Plan:
     - Use [this template](https://gist.github.com/filiptronicek/be19dcab639a1cdf08089cc762377a41) to create the PR
     - [ ]  [Smoke test](https://www.notion.so/Gitpod-VS-Code-1aa1dfcfdc5147869ec5ffcf86f430a6) version [1.xx] in VS Code Insiders
 - [ ]  Create and merge PR in Gitpod repo updating VS Code stable image tags to image generated in previous step 
-[		https://github.com/gitpod-io/gitpod/blob/866357d3743c875c56883189778492a4fafcca03/install/installer/pkg/components/workspace/ide/constants.go#L9
-](https://github.com/gitpod-io/gitpod/blob/8ca6d2bb27a85688303c4991e0f43b882a14049b/install/installer/pkg/components/workspace/ide/constants.go#L9)
+	- Update in https://github.com/gitpod-io/gitpod/blob/8ca6d2bb27a85688303c4991e0f43b882a14049b/install/installer/pkg/components/workspace/ide/constants.go#L9
+	- After updating the file, execute `cd install/installer/; make generateRenderTests`
 - [ ]  Deploy VS Code Insiders as stable
 - [ ]  Release [OpenVSCode Server](https://github.com/gitpod-io/openvscode-server)
 - [ ]  Port fixes from `release/[1.xx]` to `main` if any
