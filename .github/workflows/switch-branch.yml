@@ -70,7 +70,7 @@ jobs:
                     branch,
                 });
                 branchExists = true;
-                console.info(`A release for ${branch} branch does exist already. Changing files...`, e);
+                console.info(`A release for ${branch} branch does exist already. Changing files...`);
                 replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace("'upstream/main'", `'upstream/${branch}'`);
                     object = object.replace("'gp-code/main'", `'gp-code/${branch}'`);
