@@ -16,7 +16,7 @@ Plan:
 - [ ]  Switch nightly jobs in https://github.com/gitpod-io/openvscode-releases and Gitpod Code-Nightly GitHub actions to point to the release branches
 	- [ ] https://github.com/gitpod-io/openvscode-releases/blob/1b60a53a1a34b61dfb41ca13b65bfbad4115bda4/.github/workflows/insiders-gp.yml#L19
     - [ ] https://github.com/gitpod-io/openvscode-releases/blob/1b60a53a1a34b61dfb41ca13b65bfbad4115bda4/.github/workflows/insiders.yml#L19
-    - [ ] https://github.com/gitpod-io/gitpod/blob/4bdee21961c5390e1dc61606b7070af3b0f65971/.github/workflows/code-nightly.yaml#L34
+    - [ ] https://github.com/gitpod-io/gitpod/blob/6c4c22c9133737d5c85948cbd01ed18144735103/.github/workflows/code-nightly.yml#L34
 - [ ]  Port fixes from `release/[1.xx]` to `main` if any
 - [ ]  Switch nightly jobs in https://github.com/gitpod-io/openvscode-releases and Gitpod Code-Nightly GitHub actions to point back to the `main` and `gp-code/main` branches
 - [ ]  Monitor for recovery releases and provide corresponding release in Gitpod and OpenVSCode if necessary
