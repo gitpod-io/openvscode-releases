@@ -82,6 +82,7 @@ jobs:
                     return object;
                 });
             } catch (e) {
+                console.info(e);
                 console.info(`A release branch for ${branch} does not exist. Reverting to main.`);
                 replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace(/'upstream\/release\/.{1,5}'/i, "'upstream/main'");
