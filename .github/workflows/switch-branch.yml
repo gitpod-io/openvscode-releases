@@ -21,6 +21,7 @@ env:
 jobs:
   branch-switch:
     # if: github.event.inputs.version ||  github.event.workflow_run.conclusion != 'failure'
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
