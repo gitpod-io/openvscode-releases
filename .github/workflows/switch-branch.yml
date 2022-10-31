@@ -59,10 +59,11 @@ jobs:
             }
 
             const nextTag = process.env.NEXT_TAG || await getNextReleaseTag();
+            const branch = `release/${major(nextTag)}.${minor(nextTag)}`;
+
             let branchExists = false;
 
             try {
-                const branch = `release/${major(nextTag)}.${minor(nextTag)}`;
                 await github.rest.repos.getBranch({
                     owner: 'microsoft',
                     repo: 'vscode',
@@ -81,7 +82,7 @@ jobs:
                     return object;
                 });
             } catch (e) {
-                console.info(`A release for ${nextTag} branch does not exist. Reverting to main.`);
+                console.info(`A release branch for ${branch} does not exist. Reverting to main.`);
                 replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace(/'upstream\/release\/.{1,5}'/i, "'upstream/main'");
                     object = object.replace(/'gp-code\/release\/.{1,5}'/i, "'gp-code/main'");
