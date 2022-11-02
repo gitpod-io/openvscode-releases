@@ -25,6 +25,7 @@ Plan:
 
 - [ ]  Create and merge a PR in https://github.com/gitpod-io/gitpod to generate a stable image for VS Code
     - Update `codeCommit` inside of https://github.com/gitpod-io/gitpod/blob/main/WORKSPACE.yaml with the SHA of the tip of the `gp-code/release/{VERSION}` branch
+    - Update `codeVersion` inside of https://github.com/gitpod-io/gitpod/blob/main/WORKSPACE.yaml with the version string of the proposed release
     - Use [`insider.md`](https://github.com/gitpod-io/openvscode-releases/blob/main/resources/insider.md) as a PR template
 - [ ]  Create and merge PR in https://github.com/gitpod-io/gitpod updating VS Code stable image tags to the image generated in the previous step (the commit can be found in the resulting Werft job) 
 	- Update `CodeIDEImageStableVersion` in https://github.com/gitpod-io/gitpod/blob/main/install/installer/pkg/components/workspace/ide/constants.go
