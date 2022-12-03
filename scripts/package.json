@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@octokit/plugin-paginate-rest": "^5.0.1",
+    "octokit": "^2.0.10"
+  }
+}
