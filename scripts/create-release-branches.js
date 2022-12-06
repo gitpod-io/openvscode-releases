@@ -1,5 +1,5 @@
-const { Octokit } = require("octokit");
-const { paginateRest } = require("@octokit/plugin-paginate-rest");
+import { Octokit } from "octokit";
+import { paginateRest } from "@octokit/plugin-paginate-rest";
 
 const token = process.env.GITHUB_TOKEN;
 
@@ -23,7 +23,7 @@ const getSha = async (branch) => {
     return data.commit.sha;
 };
 
-const main = async () => {
+export const main = async () => {
   const allBranchesUpstream = await octokit.paginate(
     octokit.rest.repos.listBranches,
     {
