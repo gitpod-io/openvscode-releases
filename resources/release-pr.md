@@ -1,6 +1,11 @@
 ## Description
 Update code to `1.x.x`
 
+## Progress
+
+- [ ] Update Insiders  (https://github.com/gitpod-io/gitpod/blob/main/WORKSPACE.yaml)
+- [ ] Update Stable (https://github.com/gitpod-io/gitpod/blob/main/install/installer/pkg/components/workspace/ide/constants.go)
+
 ## How to test
 
 - Switch to VS Code Browser Insiders in settings.
@@ -16,7 +21,7 @@ Update code to `1.x.x`
      - [ ] extensions installed as sync are actually synced to all new workspaces
   - [ ] settings should not contain any mentions of MS telemetry
   - [ ] WebSockets and workers are properly proxied
-     - [ ] diff editor should be operatable
+     - [ ] diff editor should be operable
      - [ ] trigger reconnection with `window.WebSocket.disconnectWorkspace()`, check that old WebSockets are closed and new opened of the same amount
   - [ ] workspace specific commands should work, i.e. F1 → type <kbd>Gitpod</kbd> prefix
   - [ ] that a PR view is preloaded when opening a PR URL
