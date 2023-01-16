@@ -116,7 +116,7 @@ jobs:
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
-        run: echo "::set-output name=value::$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js ${{ matrix.vscode_arch }})"
+        run: echo "{value}={$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js ${{ matrix.vscode_arch }})}" >> $GITHUB_OUTPUT
       - name: Cache node modules
         id: cacheNodeModules
         uses: actions/cache@v3
@@ -127,7 +127,7 @@ jobs:
         working-directory: ./openvscode-server
         id: yarnCacheDirPath
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "{dir}={$(yarn cache dir)}" >> $GITHUB_OUTPUT
       - name: Cache yarn directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
@@ -260,9 +260,9 @@ jobs:
           mv vscode-reh-web-linux-${{ matrix.vscode_arch }} ${name}
           tar -czf ${name}.tar.gz ${name}
 
-          echo "::set-output name=release_commit::${RELEASE_COMMIT}"
-          echo "::set-output name=version::${version}"
-          echo "::set-output name=quality::${QUALITY}"
+          echo "{release_commit}={${RELEASE_COMMIT}}" >> $GITHUB_OUTPUT
+          echo "{version}={${version}}" >> $GITHUB_OUTPUT
+          echo "{quality}={${QUALITY}}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
