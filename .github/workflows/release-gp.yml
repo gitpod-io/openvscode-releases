@@ -199,6 +199,9 @@ jobs:
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "quality=${QUALITY}" >> $GITHUB_OUTPUT
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
