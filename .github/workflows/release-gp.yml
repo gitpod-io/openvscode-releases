@@ -13,7 +13,7 @@ on:
         - insider
         - stable
         default: insider
-      releaseTags:
+      addTags:
         description: 'Adds release tags (latest, nightly, etc) to the image'
         type: boolean
         required: true
@@ -24,7 +24,7 @@ on:
 env:
   QUALITY: ${{ github.event.inputs.quality || 'insider' }}
   RELEASE_COMMIT: ${{ github.event.inputs.commit || 'gp-code/main' }}
-  ADD_TAGS: ${{ github.event.inputs.releaseTags || 'true' }}
+  ADD_TAGS: ${{ github.event.inputs.addTags || 'true' }}
 
 jobs:
   build-dependencies:
