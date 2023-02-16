@@ -48,7 +48,8 @@ jobs:
           images: |
             gitpod/openvscode-server
           tags: |
-            type=semver,pattern={{version}},value=v${{ inputs.version }},enable=${{ inputs.stable == true }}
+            type=raw,value=${{ inputs.version }},enable=${{ inputs.stable == true }}
+            type=raw,value=latest,enable=${{ inputs.stable == true }}
             type=raw,value=insiders,enable=${{ inputs.stable == false }}
             type=raw,value=nightly,enable=${{ inputs.stable == false }}
 

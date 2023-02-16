@@ -1,4 +1,4 @@
-name: Insiders
+name: OpenVSCode Server Rebase
 on:
   workflow_dispatch:
     inputs:
@@ -22,7 +22,6 @@ jobs:
   sync-main:
     name: Syncing openvscode-server
     runs-on: ubuntu-latest
-    # timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
         with:
@@ -114,18 +113,6 @@ jobs:
         with:
           name: upstream_commit
           path: __upstream_commit.txt
-
-      # Store HEAD commit to make a insiders release (release.yml)
-      - name: Write the release commit to a file
-        if: ${{ success() }}
-        run: |
-          echo "$(git rev-parse HEAD)" > __release_commit.txt
-      - name: Upload release commit file
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: release_commit
-          path: __release_commit.txt
 
       - name: Upload logs files
         if: ${{ failure() && (steps.runSmokeTests.outcome == 'failure' || steps.runIntegrationTests.outcome == 'failure') }}
