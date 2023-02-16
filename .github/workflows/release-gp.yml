@@ -64,6 +64,8 @@ jobs:
     needs: build-dependencies
     steps:
       - uses: actions/checkout@v3
+      
+      - uses: actions/checkout@v3
         with:
           repository: ${{ github.repository_owner }}/openvscode-server
           ref: ${{ env.RELEASE_COMMIT }}
