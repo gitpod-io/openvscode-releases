@@ -13,6 +13,10 @@ on:
         - insider
         - stable
         default: insider
+      releaseTags:
+        description: 'Adds release tags (latest, nightly, etc) to the image'
+        type: boolean
+        required: true
   workflow_run:
     workflows: ["Gitpod Code Rebase"]
     types: [completed]
@@ -20,6 +24,7 @@ on:
 env:
   QUALITY: ${{ github.event.inputs.quality || 'insider' }}
   RELEASE_COMMIT: ${{ github.event.inputs.commit || 'gp-code/main' }}
+  ADD_TAGS: ${{ github.event.inputs.releaseTags || 'true' }}
 
 jobs:
   build-dependencies:
