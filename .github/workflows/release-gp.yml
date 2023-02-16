@@ -220,7 +220,7 @@ jobs:
         with:
           push: true
           context: .
-          file: gitpodCode.Dockerfile
+          file: ./gitpodCode.Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: |
             io.gitpod.ide.version=${{ steps.release_data.outputs.version }}
