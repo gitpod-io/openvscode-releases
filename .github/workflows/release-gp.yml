@@ -217,10 +217,10 @@ jobs:
             eu.gcr.io/gitpod-core-dev/build/ide/code
           tags: |
             type=raw,value=commit-${{ steps.release_data.outputs.release_commit }}
-            type=raw,value=${{ steps.release_data.outputs.version }},enable=${{ steps.release_data.outputs.quality == 'stable' }}
-            type=raw,value=latest,enable=${{ steps.release_data.outputs.quality == 'stable' }}
-            type=raw,value=insiders,enable=${{ steps.release_data.outputs.quality != 'stable' }}
-            type=raw,value=nightly,enable=${{ steps.release_data.outputs.quality != 'stable' }}
+            type=raw,value=${{ steps.release_data.outputs.version }},enable=${{ steps.release_data.outputs.quality == 'stable' && env.ADD_TAGS == 'true'}}
+            type=raw,value=latest,enable=${{ steps.release_data.outputs.quality == 'stable' && env.ADD_TAGS == 'true' }}
+            type=raw,value=insiders,enable=${{ steps.release_data.outputs.quality != 'stable' && env.ADD_TAGS == 'true' }}
+            type=raw,value=nightly,enable=${{ steps.release_data.outputs.quality != 'stable' && env.ADD_TAGS == 'true' }}
 
       - name: Docker build and push
         uses: docker/build-push-action@v3
