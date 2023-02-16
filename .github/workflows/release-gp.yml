@@ -17,9 +17,9 @@ on:
         description: 'Adds release tags (latest, nightly, etc) to the image'
         type: boolean
         required: true
-  workflow_run:
-    workflows: ["Gitpod Code Rebase"]
-    types: [completed]
+  # workflow_run:
+  #   workflows: ["Gitpod Code Rebase"]
+  #   types: [completed]
 
 env:
   QUALITY: ${{ github.event.inputs.quality || 'insider' }}
