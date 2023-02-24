@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "es2018",
+    "module": "NodeNext",
+    "skipLibCheck": true
+  }
+}
