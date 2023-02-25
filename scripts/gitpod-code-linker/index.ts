@@ -1,6 +1,7 @@
 import { Octokit } from 'octokit';
 import { load } from 'js-yaml';
 import fs from 'fs';
+import { getInfoFromImage } from './oci-tool';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
@@ -85,7 +86,6 @@ message.push(`## IDE Code linker bot\n\n`);
                 const workspaceYaml: any = await load(currentFileOnPr);
 
                 const workspaceCodeCommit = workspaceYaml?.defaultArgs?.codeCommit;
-                console.log(workspaceCodeCommit)
                 if (!workspaceCodeCommit) {
                     return;
                 }
@@ -95,7 +95,8 @@ message.push(`## IDE Code linker bot\n\n`);
                 }
                 break;
             case ACCEPTED_FILES.IDE_CONSTANTS:
-                const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/)
+                const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/);
+                const gitpodVsCodeStableRegex = new RegExp(/CodeIDEImageStableVersion\s*= "commit-(.*)"/);
 
                 const gitpodExtensionsCommit = currentFileOnPr.match(gitpodExtensionsRegex)[1];
                 const gitpodExtensionsCommitOriginal = currentFileOnHead.match(gitpodExtensionsRegex)[1];
@@ -106,6 +107,19 @@ message.push(`## IDE Code linker bot\n\n`);
 
                 if (gitpodExtensionsCommit !== gitpodExtensionsCommitOriginal) {
                     message.push(`- Built-in extensions are set to commit ${REPOSITORIES.GITPOD_CODE}/commit/${gitpodExtensionsCommit}`);
+                }
+
+                const gitpodVsCodeStableCommit = currentFileOnPr.match(gitpodVsCodeStableRegex)[1];
+                const gitpodVsCodeStableCommitOriginal = currentFileOnHead.match(gitpodVsCodeStableRegex)[1];
+
+                if (!gitpodVsCodeStableCommit || !gitpodVsCodeStableCommitOriginal) {
+                    console.debug(`Could not find gitpod vscode stable commit in ${gitpodVsCodeStableCommit} or ${gitpodVsCodeStableCommitOriginal}.`);
+                    return;
+                }
+
+                const actualVsCodeInfo = await getInfoFromImage(gitpodVsCodeStableCommit);
+                if (gitpodVsCodeStableCommit !== gitpodVsCodeStableCommitOriginal) {
+                    message.push(`- VS Code Stable is set to v${actualVsCodeInfo.version} ${REPOSITORIES.OPEN_VSCODE_SERVER}/commit/${actualVsCodeInfo.commit}`);
                 }
                 break;
             default:
