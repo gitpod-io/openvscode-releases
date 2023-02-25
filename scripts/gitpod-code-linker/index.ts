@@ -117,9 +117,9 @@ message.push(`## IDE Code linker bot\n\n`);
                     return;
                 }
 
-                const actualVsCodeInfo = await getInfoFromImage(gitpodVsCodeStableCommit);
                 if (gitpodVsCodeStableCommit !== gitpodVsCodeStableCommitOriginal) {
-                    message.push(`- VS Code Stable is set to v${actualVsCodeInfo.version} ${REPOSITORIES.OPEN_VSCODE_SERVER}/commit/${actualVsCodeInfo.commit}`);
+                    const actualVsCodeInfo = await getInfoFromImage(gitpodVsCodeStableCommit);
+                    message.push(`- VS Code Stable is set to v${actualVsCodeInfo.version}@${REPOSITORIES.OPEN_VSCODE_SERVER}/commit/${actualVsCodeInfo.commit}`);
                 }
                 break;
             default:
