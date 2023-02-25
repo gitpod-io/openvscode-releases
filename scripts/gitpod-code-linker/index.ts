@@ -1,5 +1,6 @@
 import { Octokit } from 'octokit';
 import { load } from 'js-yaml';
+import { promises as fs } from 'fs';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
@@ -15,8 +16,18 @@ const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 }).rest;
 
-const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
-const prNumber = parseInt(process.env.GITHUB_REF.split('/').at(-1));
+let prNumber = 16573;
+let owner = "gitpod-io";
+let repo = "gitpod";
+
+if (process.env.GITHUB_EVENT_PATH) {
+    const githubActionEvent = JSON.parse(
+        await fs.readFile(process.env.GITHUB_EVENT_PATH, "utf8")
+    );
+    prNumber = githubActionEvent.pull_request.number;
+    owner = githubActionEvent.pull_request.base.repo.owner.login;
+    repo = githubActionEvent.pull_request.base.repo.name;
+}
 
 const getRelevantFileChanges = async (prNumber: number) => {
 
