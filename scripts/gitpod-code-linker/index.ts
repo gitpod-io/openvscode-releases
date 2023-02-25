@@ -12,6 +12,10 @@ const REPOSITORIES = {
     'OPEN_VSCODE_SERVER': 'https://github.com/gitpod-io/openvscode-server'
 };
 
+if (!process.env.GITHUB_TOKEN) {
+    throw new Error('GITHUB_TOKEN is not set');
+}
+
 const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
 }).rest;
