@@ -1,5 +1,5 @@
 import { Octokit } from 'octokit';
-import {load} from 'js-yaml';
+import { load } from 'js-yaml';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
@@ -69,8 +69,6 @@ message.push(`## IDE Code linker bot\n\n`);
                 const workspaceYamlOriginal: any = await load(currentFileOnHead);
                 const workspaceYaml: any = await load(currentFileOnPr);
 
-                console.log(currentFileOnHead)
-                
                 const workspaceCodeCommit = workspaceYaml?.defaultArgs?.codeCommit;
                 console.log(workspaceCodeCommit)
                 if (!workspaceCodeCommit) {
@@ -87,11 +85,9 @@ message.push(`## IDE Code linker bot\n\n`);
                 const gitpodExtensionsCommit = currentFileOnPr.match(gitpodExtensionsRegex)[1];
                 const gitpodExtensionsCommitOriginal = currentFileOnPr.match(gitpodExtensionsRegex)[1];
                 if (!gitpodExtensionsCommit || !gitpodExtensionsCommitOriginal) {
-                    console.debug('Could not find gitpod extensions commit in ' + gitpodExtensionsCommit + ' or ' + gitpodExtensionsCommitOriginal + '.');
+                    console.debug(`Could not find gitpod extensions commit in ${gitpodExtensionsCommit} or ${gitpodExtensionsCommitOriginal}.`);
                     return;
                 }
-
-                console.info('gitpodExtensionsCommit: ' + gitpodExtensionsCommit, 'gitpodExtensionsCommitOriginal: ' + gitpodExtensionsCommitOriginal);
 
                 if (gitpodExtensionsCommit === gitpodExtensionsCommitOriginal) {
                     message.push(`- Built-in extensions are set to commit ${REPOSITORIES.GITPOD_CODE}/commit/${gitpodExtensionsCommit}`);
