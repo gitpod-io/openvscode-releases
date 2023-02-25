@@ -89,7 +89,7 @@ message.push(`## IDE Code linker bot\n\n`);
                     return;
                 }
 
-                if (gitpodExtensionsCommit === gitpodExtensionsCommitOriginal) {
+                if (gitpodExtensionsCommit !== gitpodExtensionsCommitOriginal) {
                     message.push(`- Built-in extensions are set to commit ${REPOSITORIES.GITPOD_CODE}/commit/${gitpodExtensionsCommit}`);
                 }
                 break;
@@ -97,6 +97,15 @@ message.push(`## IDE Code linker bot\n\n`);
         }
     }));
     console.log(message);
+
+    if (message.length > 1) {
+        await octokit.issues.createComment({
+            owner,
+            repo,
+            issue_number: prNumber,
+            body: message.join('\n\r'),
+        });
+    }
 })();
 
 
