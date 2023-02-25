@@ -98,7 +98,7 @@ message.push(`## IDE Code linker bot\n\n`);
                 const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/)
 
                 const gitpodExtensionsCommit = currentFileOnPr.match(gitpodExtensionsRegex)[1];
-                const gitpodExtensionsCommitOriginal = currentFileOnPr.match(gitpodExtensionsRegex)[1];
+                const gitpodExtensionsCommitOriginal = currentFileOnHead.match(gitpodExtensionsRegex)[1];
                 if (!gitpodExtensionsCommit || !gitpodExtensionsCommitOriginal) {
                     console.debug(`Could not find gitpod extensions commit in ${gitpodExtensionsCommit} or ${gitpodExtensionsCommitOriginal}.`);
                     return;
@@ -114,12 +114,32 @@ message.push(`## IDE Code linker bot\n\n`);
     console.log(message);
 
     if (message.length > 1) {
-        await octokit.issues.createComment({
+        const loggedInUser = await octokit.users.getAuthenticated();
+        console.log(`Looking for existing comments from @${loggedInUser.data.login}`);
+
+        const existingComment = (await octokit.issues.listComments({
             owner,
             repo,
             issue_number: prNumber,
-            body: message.join('\n\r'),
-        });
+        })).data.find(comment => comment.user.login === loggedInUser.data.login && comment.body.includes('## IDE Code linker bot'));
+
+        if (existingComment) {
+            await octokit.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body: message.join('\n\r'),
+            });
+            console.info('Updated existing comment');
+        } else {
+            await octokit.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: message.join('\n\r'),
+            });
+            console.info('Created new comment');
+        };
     }
 })();
 
