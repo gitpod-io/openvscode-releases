@@ -1,9 +1,19 @@
 import { Octokit } from 'octokit';
+import { loadYamlFile } from 'load-yaml-file';
+import * as fs from 'fs';
+import * as download from 'download';
+import * as os from 'os';
+import * as path from 'path';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
     'IDE_CONSTANTS': 'install/installer/pkg/components/workspace/ide/constants.go'
-}
+};
+
+const REPOSITORIES = {
+    'GITPOD_CODE': 'https://github.com/gitpod-io/gitpod-code',
+    'OPEN_VSCODE_SERVER': 'https://github.com/gitpod-io/openvscode-server'
+};
 
 const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
@@ -38,5 +48,46 @@ const getRelevantFileChanges = async (prNumber: number) => {
     return fileChanges;
 }
 
-getRelevantFileChanges(prNumber).then(console.log);
+const message = [];
+(async () => {
+    const prChanges = await getRelevantFileChanges(prNumber);
+    await Promise.all(prChanges.map(async (file) => {
+        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/${file.sha}/${file.filename}`, os.tmpdir(), { filename: `${file.sha}-${file.filename}` });
+        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file.filename}`, os.tmpdir(), { filename: `head-${file.filename}` });
+
+        switch (file.filename) {
+            case ACCEPTED_FILES.WORKSPACE_YAML:
+                const workspaceYamlOriginal: any = await loadYamlFile(path.join(os.tmpdir(), `${file.sha}-${file.filename}`));
+                const workspaceYaml: any = await loadYamlFile(path.join(os.tmpdir(), `head-${file.filename}`));
+                
+                const workspaceCodeCommit = workspaceYaml?.defaultArgs?.codeCommit;
+                if (!workspaceCodeCommit) {
+                    return;
+                }
+
+                if (workspaceCodeCommit !== workspaceYamlOriginal.defaultArgs.codeCommit) {
+                    message.push(`- VS Code Insiders is set to commit ${REPOSITORIES.OPEN_VSCODE_SERVER}/commit/${workspaceYaml.defaultArgs.codeCommit}`);
+                }
+                break;
+            case ACCEPTED_FILES.IDE_CONSTANTS:
+                const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/g)
+                const fileContents = await fs.promises.readFile(path.join(os.tmpdir(), `${file.sha}-${file.filename}`), 'utf8');
+                const fileContentsOriginal = await fs.promises.readFile(path.join(os.tmpdir(), `head-${file.filename}`), 'utf8');
+
+                const gitpodExtensionsCommit = gitpodExtensionsRegex.exec(fileContents)?.[1];
+                const gitpodExtensionsCommitOriginal = gitpodExtensionsRegex.exec(fileContentsOriginal)?.[1];
+                if (!gitpodExtensionsCommit || !gitpodExtensionsCommitOriginal) {
+                    return;
+                }
+
+                if (gitpodExtensionsCommit !== gitpodExtensionsCommitOriginal) {
+                    message.push(`- Built-in extensions are set to commit ${REPOSITORIES.GITPOD_CODE}/commit/${gitpodExtensionsCommit}`);
+                }
+                break;
+            default:
+        }
+    }));
+    console.log(message);
+})();
+
 
