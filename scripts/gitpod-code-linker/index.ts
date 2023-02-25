@@ -1,10 +1,5 @@
 import { Octokit } from 'octokit';
-import { loadYamlFile } from 'load-yaml-file';
-import * as fs from 'fs';
-import * as download from 'download';
-import * as os from 'os';
-import * as path from 'path';
-import { basename } from 'path';
+import {load} from 'js-yaml';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
@@ -50,20 +45,34 @@ const getRelevantFileChanges = async (prNumber: number) => {
 }
 
 const message = [];
+message.push(`## IDE Code linker bot\n\n`);
+
 (async () => {
     const prChanges = await getRelevantFileChanges(prNumber);
     await Promise.all(prChanges.map(async (file) => {
-        const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'gp-'));
-        const fileName = basename(file.path);
-        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/${file.sha}/${file.path}`, directory, { filename: `${file.sha}-${fileName}` });
-        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file.path}`, directory, { filename: `head-${fileName}` });
+        const currentFileOnPr = (await octokit.repos.getContent({
+            owner, repo,
+            path: file.path,
+            ref: file.sha,
+            mediaType: { format: "raw", }
+        })).data.toString();
+
+        const currentFileOnHead = (await octokit.repos.getContent({
+            owner, repo,
+            ref: 'main',
+            path: file.path,
+            mediaType: { format: "raw", }
+        })).data.toString();
 
         switch (file.path) {
             case ACCEPTED_FILES.WORKSPACE_YAML:
-                const workspaceYamlOriginal: any = await loadYamlFile(path.join(directory, `${file.sha}-${fileName}`));
-                const workspaceYaml: any = await loadYamlFile(path.join(directory, `head-${fileName}`));
+                const workspaceYamlOriginal: any = await load(currentFileOnHead);
+                const workspaceYaml: any = await load(currentFileOnPr);
+
+                console.log(currentFileOnHead)
                 
                 const workspaceCodeCommit = workspaceYaml?.defaultArgs?.codeCommit;
+                console.log(workspaceCodeCommit)
                 if (!workspaceCodeCommit) {
                     return;
                 }
@@ -73,18 +82,18 @@ const message = [];
                 }
                 break;
             case ACCEPTED_FILES.IDE_CONSTANTS:
-                const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/g)
-                const fileContents = await fs.promises.readFile(path.join(directory, `${file.sha}-${fileName}`), 'utf8');
-                const fileContentsOriginal = await fs.promises.readFile(path.join(directory, `head-${fileName}`), 'utf8');
+                const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/)
 
-                const gitpodExtensionsCommit = gitpodExtensionsRegex.exec(fileContents)?.[1];
-                const gitpodExtensionsCommitOriginal = gitpodExtensionsRegex.exec(fileContentsOriginal)?.[1];
+                const gitpodExtensionsCommit = currentFileOnPr.match(gitpodExtensionsRegex)[1];
+                const gitpodExtensionsCommitOriginal = currentFileOnPr.match(gitpodExtensionsRegex)[1];
                 if (!gitpodExtensionsCommit || !gitpodExtensionsCommitOriginal) {
                     console.debug('Could not find gitpod extensions commit in ' + gitpodExtensionsCommit + ' or ' + gitpodExtensionsCommitOriginal + '.');
                     return;
                 }
 
-                if (gitpodExtensionsCommit !== gitpodExtensionsCommitOriginal) {
+                console.info('gitpodExtensionsCommit: ' + gitpodExtensionsCommit, 'gitpodExtensionsCommitOriginal: ' + gitpodExtensionsCommitOriginal);
+
+                if (gitpodExtensionsCommit === gitpodExtensionsCommitOriginal) {
                     message.push(`- Built-in extensions are set to commit ${REPOSITORIES.GITPOD_CODE}/commit/${gitpodExtensionsCommit}`);
                 }
                 break;
