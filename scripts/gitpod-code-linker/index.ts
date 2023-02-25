@@ -1,6 +1,6 @@
 import { Octokit } from 'octokit';
 import { load } from 'js-yaml';
-import { promises as fs } from 'fs';
+import fs from 'fs';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
@@ -22,7 +22,7 @@ let repo = "gitpod";
 
 if (process.env.GITHUB_EVENT_PATH) {
     const githubActionEvent = JSON.parse(
-        await fs.readFile(process.env.GITHUB_EVENT_PATH, "utf8")
+        fs.readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")
     );
     prNumber = githubActionEvent.pull_request.number;
     owner = githubActionEvent.pull_request.base.repo.owner.login;
