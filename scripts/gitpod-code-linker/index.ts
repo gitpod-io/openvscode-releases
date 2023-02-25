@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as download from 'download';
 import * as os from 'os';
 import * as path from 'path';
+import { basename } from 'path';
 
 const ACCEPTED_FILES = {
     'WORKSPACE_YAML': 'WORKSPACE.yaml',
@@ -42,8 +43,8 @@ const getRelevantFileChanges = async (prNumber: number) => {
         const { number } = pr;
         const { login } = pr.user;
         const { html_url } = pr;
-        return { filename, status, sha, number, login, html_url };
-    }).filter(file => file.status === 'modified' && Object.values(ACCEPTED_FILES).includes(file.filename));
+        return { path: filename, status, sha, number, login, html_url };
+    }).filter(file => file.status === 'modified' && Object.values(ACCEPTED_FILES).includes(file.path));
 
     return fileChanges;
 }
@@ -52,13 +53,15 @@ const message = [];
 (async () => {
     const prChanges = await getRelevantFileChanges(prNumber);
     await Promise.all(prChanges.map(async (file) => {
-        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/${file.sha}/${file.filename}`, os.tmpdir(), { filename: `${file.sha}-${file.filename}` });
-        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file.filename}`, os.tmpdir(), { filename: `head-${file.filename}` });
+        const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'gp-'));
+        const fileName = basename(file.path);
+        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/${file.sha}/${file.path}`, directory, { filename: `${file.sha}-${fileName}` });
+        await download.default(`https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file.path}`, directory, { filename: `head-${fileName}` });
 
-        switch (file.filename) {
+        switch (file.path) {
             case ACCEPTED_FILES.WORKSPACE_YAML:
-                const workspaceYamlOriginal: any = await loadYamlFile(path.join(os.tmpdir(), `${file.sha}-${file.filename}`));
-                const workspaceYaml: any = await loadYamlFile(path.join(os.tmpdir(), `head-${file.filename}`));
+                const workspaceYamlOriginal: any = await loadYamlFile(path.join(directory, `${file.sha}-${fileName}`));
+                const workspaceYaml: any = await loadYamlFile(path.join(directory, `head-${fileName}`));
                 
                 const workspaceCodeCommit = workspaceYaml?.defaultArgs?.codeCommit;
                 if (!workspaceCodeCommit) {
@@ -71,12 +74,13 @@ const message = [];
                 break;
             case ACCEPTED_FILES.IDE_CONSTANTS:
                 const gitpodExtensionsRegex = new RegExp(/CodeWebExtensionVersion\s*= "commit-(.*)"/g)
-                const fileContents = await fs.promises.readFile(path.join(os.tmpdir(), `${file.sha}-${file.filename}`), 'utf8');
-                const fileContentsOriginal = await fs.promises.readFile(path.join(os.tmpdir(), `head-${file.filename}`), 'utf8');
+                const fileContents = await fs.promises.readFile(path.join(directory, `${file.sha}-${fileName}`), 'utf8');
+                const fileContentsOriginal = await fs.promises.readFile(path.join(directory, `head-${fileName}`), 'utf8');
 
                 const gitpodExtensionsCommit = gitpodExtensionsRegex.exec(fileContents)?.[1];
                 const gitpodExtensionsCommitOriginal = gitpodExtensionsRegex.exec(fileContentsOriginal)?.[1];
                 if (!gitpodExtensionsCommit || !gitpodExtensionsCommitOriginal) {
+                    console.debug('Could not find gitpod extensions commit in ' + gitpodExtensionsCommit + ' or ' + gitpodExtensionsCommitOriginal + '.');
                     return;
                 }
 
