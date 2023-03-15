@@ -23,20 +23,13 @@ Update code to `1.x.x`
   - [ ] WebSockets and workers are properly proxied
      - [ ] diff editor should be operable
      - [ ] trigger reconnection with `window.WebSocket.disconnectWorkspace()`, check that old WebSockets are closed and new opened of the same amount
-  - [ ] workspace specific commands should work, i.e. F1 → type <kbd>Gitpod</kbd> prefix
+  - [ ] workspace specific commands should work, i.e. <kbd>F1</kbd> → type <kbd>Gitpod</kbd>
   - [ ] that a PR view is preloaded when opening a PR URL
   - [ ] test `gp open` and `gp preview`
   - [ ] test open in VS Code Desktop, check `gp open` and `gp preview` in task/user terminals
   - [ ] telemetry data is collected in [Segment](https://app.segment.com/gitpod/sources/staging_trusted/debugger)
 
 ## Release Notes
-<!--
-  Add entries for the CHANGELOG.md or "NONE" if there aren't any user facing changes.
-  Each line becomes a separate entry.
-  Format: [!<optional for breaking>] <description>
-  Example: !basic auth is no longer supported
-  See https://www.notion.so/gitpod/Release-Notes-513a74fdd23b4cb1b3b3aefb1d34a3e0
--->
 ```release-note
 NONE
 ```
