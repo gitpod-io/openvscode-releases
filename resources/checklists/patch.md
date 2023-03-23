@@ -6,6 +6,5 @@
     - Use [`release-pr.md`](https://github.com/gitpod-io/openvscode-releases/blob/main/resources/release-pr.md) as the PR template
     - Update the VS Code stable image tags to the image generated in the previous step (the commit can be found in the resulting Werft job) 
 	    - Update `CodeIDEImageStableVersion` in https://github.com/gitpod-io/gitpod/blob/main/install/installer/pkg/components/workspace/ide/constants.go
-	- After updating the file, execute `cd install/installer/; make generateRenderTests`
 - Deploy VS Code Insiders as stable ([How to deploy](https://www.notion.so/gitpod/How-to-deploy-IDE-e66a8219add74f2090bfc08104f91445) in Notion)
 - Release [OpenVSCode Server](https://github.com/gitpod-io/openvscode-server)
