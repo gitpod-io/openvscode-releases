@@ -171,6 +171,7 @@ jobs:
           SLACK_MESSAGE: 'Start preparing for a new recovery release :exclamation:'
 
   start-automatic-release-on-release:
+    name: Check and start automatic release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v3
@@ -209,7 +210,7 @@ jobs:
                 repo: 'openvscode-server',
               });
               const releaseTag = latestRelease.tag_name;
-              gitpodRelease = releaseTag;
+              gitpodRelease = releaseTag.split('-')[1];
             } catch (e) {
               console.log(e);
             }
