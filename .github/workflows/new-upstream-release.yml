@@ -210,7 +210,7 @@ jobs:
                 repo: 'openvscode-server',
               });
               const releaseTag = latestRelease.tag_name;
-              gitpodRelease = releaseTag.split('v')[1];
+              gitpodRelease = releaseTag.split('-v')[1];
             } catch (e) {
               console.log(e);
             }
