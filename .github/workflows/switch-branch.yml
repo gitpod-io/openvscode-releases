@@ -135,10 +135,10 @@ jobs:
       - name: Set env
         run: echo "COMMIT_SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: Began new VS Code Release
-          SLACK_MESSAGE: 'Updated openvscode-releases with [${{ env.COMMIT_SHA_SHORT }}](https://github.com/${{ github.repository_owner }}/gitpod/commit/${{ env.COMMIT_SHA_SHORT }}) and created [${{ steps.gp-pr.outputs.pull-request-number }}](${{ steps.gp-pr.outputs.pull-request-url }}) for updating `Code Nightly`.'
+      # - name: Slack Notification
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      #     SLACK_COLOR: ${{ job.status }}
+      #     SLACK_TITLE: Began new VS Code Release
+      #     SLACK_MESSAGE: 'Updated openvscode-releases with [${{ env.COMMIT_SHA_SHORT }}](https://github.com/${{ github.repository_owner }}/gitpod/commit/${{ env.COMMIT_SHA_SHORT }}) and created [${{ steps.gp-pr.outputs.pull-request-number }}](${{ steps.gp-pr.outputs.pull-request-url }}) for updating `Code Nightly`.'
