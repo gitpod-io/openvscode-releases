@@ -117,6 +117,8 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           repository: openvscode-releases
+          branch: main
+          token: ${{ secrets.GH_PAT }}
           commit_message: "Update release branch"
 
       - name: Create Pull Request (gitpod)
