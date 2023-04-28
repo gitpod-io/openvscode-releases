@@ -27,6 +27,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: openvscode-releases
+          token: ${{ secrets.GH_PAT }}
       - uses: actions/checkout@v3
         with:
           path: gitpod
@@ -113,15 +114,12 @@ jobs:
                     object.replace('https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/main', `https://api.github.com/repos/gitpod-io/openvscode-server/commits/gp-code/release/${nextTag}`))
             }
 
-      - name: Add changes
-        run: cd openvscode-releases/ && git add .
-
       - name: Commit changes (openvscode-releases)
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           repository: openvscode-releases
           branch: main
-          token: ${{ secrets.GH_PAT }}
+          add_options: '--all'
           commit_message: "Update release branch"
 
       - name: Create Pull Request (gitpod)
