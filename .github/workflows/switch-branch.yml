@@ -122,6 +122,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         id: gp-pr
         with:
+          token: ${{ secrets.GH_PAT }}
           path: gitpod
           commit-message: "code: Update Nightly"
           branch: "code-update-nightly"
