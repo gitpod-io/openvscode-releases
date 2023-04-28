@@ -65,6 +65,7 @@ jobs:
             let branchExists = false;
 
             try {
+                console.info("Checking for " + branch);
                 await github.rest.repos.getBranch({
                     owner: 'microsoft',
                     repo: 'vscode',
