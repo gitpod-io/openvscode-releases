@@ -118,7 +118,6 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           repository: openvscode-releases
-          branch: main
           add_options: '--all'
           commit_message: "Update release branch"
 
