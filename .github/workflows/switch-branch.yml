@@ -21,11 +21,13 @@ env:
 jobs:
   branch-switch:
     # if: github.event.inputs.version ||  github.event.workflow_run.conclusion != 'failure'
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           path: openvscode-releases
+          token: ${{ secrets.GH_PAT }}
       - uses: actions/checkout@v3
         with:
           path: gitpod
@@ -59,17 +61,19 @@ jobs:
             }
 
             const nextTag = process.env.NEXT_TAG || await getNextReleaseTag();
+            const branch = `release/${major(nextTag)}.${minor(nextTag)}`;
+
             let branchExists = false;
 
             try {
-                const branch = `release/${major(nextTag)}.${minor(nextTag)}`;
+                console.info("Checking for " + branch);
                 await github.rest.repos.getBranch({
                     owner: 'microsoft',
                     repo: 'vscode',
                     branch,
                 });
                 branchExists = true;
-                console.info(`A release for ${branch} branch does exist already. Changing files...`, e);
+                console.info(`A release for ${branch} branch does exist already. Changing files...`);
                 replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace("'upstream/main'", `'upstream/${branch}'`);
                     object = object.replace("'gp-code/main'", `'gp-code/${branch}'`);
@@ -81,7 +85,8 @@ jobs:
                     return object;
                 });
             } catch (e) {
-                console.info(`A release for ${nextTag} branch does not exist. Reverting to main.`);
+                console.info(e);
+                console.info(`A release branch for ${branch} does not exist. Reverting to main.`);
                 replaceInFile('${{ github.workspace }}/openvscode-releases/.github/workflows/insiders-gp.yml', (object) => {
                     object = object.replace(/'upstream\/release\/.{1,5}'/i, "'upstream/main'");
                     object = object.replace(/'gp-code\/release\/.{1,5}'/i, "'gp-code/main'");
@@ -113,12 +118,14 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           repository: openvscode-releases
+          add_options: '--all'
           commit_message: "Update release branch"
 
       - name: Create Pull Request (gitpod)
         uses: peter-evans/create-pull-request@v4
         id: gp-pr
         with:
+          token: ${{ secrets.GH_PAT }}
           path: gitpod
           commit-message: "code: Update Nightly"
           branch: "code-update-nightly"
