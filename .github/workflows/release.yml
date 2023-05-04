@@ -37,9 +37,9 @@ jobs:
         - vscode_arch: x64
           npm_arch: x64
           image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
-        - vscode_arch: arm64
-          npm_arch: arm64
-          image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
+        # - vscode_arch: arm64
+        #   npm_arch: arm64
+        #   image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
     
     name: Build native dependencies linux
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
