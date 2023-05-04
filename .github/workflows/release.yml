@@ -29,8 +29,19 @@ jobs:
   build-dependencies:
     runs-on: ubuntu-latest
     container:
-      image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
-    name: Build native dependencies linux-x64
+      image: ${{ matrix.image }} 
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+        - vscode_arch: x64
+          npm_arch: x64
+          image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
+        - vscode_arch: arm64
+          npm_arch: arm64
+          image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
+    
+    name: Build native dependencies linux
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v3
@@ -42,19 +53,19 @@ jobs:
       - name: Execute yarn
         run: |
           set -e
-          export npm_config_arch=x64
+          export npm_config_arch=${{ matrix.npm_arch }}
           yarn --cwd remote --frozen-lockfile --network-timeout 180000
 
       - name: Compress node_modules output
         run: |
           set -e
-          tar -cz --ignore-failed-read -f reh_node_modules-x64.tar.gz -C ./remote node_modules
+          tar -cz --ignore-failed-read -f reh_node_modules-${{ matrix.vscode_arch }}.tar.gz -C ./remote node_modules
 
       - name: Upload compiled dependencies
         uses: actions/upload-artifact@v3
         with:
-          name: reh_node_modules-x64
-          path: reh_node_modules-x64.tar.gz
+          name: reh_node_modules-${{ matrix.vscode_arch }}
+          path: reh_node_modules-${{ matrix.vscode_arch }}.tar.gz
 
   build:
     runs-on: ubuntu-latest
