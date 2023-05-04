@@ -74,10 +74,10 @@ jobs:
           image: gitpod/openvscode-server-linux-build-agent:bionic-x64
         - vscode_arch: arm64
           npm_arch: arm64
-          image: gitpod/openvscode-server-linux-build-agent:stretch-arm64
+          image: gitpod/openvscode-server-linux-build-agent:buster-arm64
         - vscode_arch: armhf
           npm_arch: armv7l
-          image: gitpod/openvscode-server-linux-build-agent:stretch-armhf
+          image: gitpod/openvscode-server-linux-build-agent:buster-armhf
 
     name: Build linux-${{ matrix.vscode_arch }}
     needs: build-dependencies
