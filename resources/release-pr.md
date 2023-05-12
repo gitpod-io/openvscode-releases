@@ -29,6 +29,9 @@ Update code to `1.x.x`
   - [ ] test open in VS Code Desktop, check `gp open` and `gp preview` in task/user terminals
   - [ ] telemetry data is collected in [Segment](https://app.segment.com/gitpod/sources/staging_trusted/debugger)
 
+### Preview status
+gitpod:summary
+
 ## Release Notes
 ```release-note
 NONE
