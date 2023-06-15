@@ -32,11 +32,6 @@ Update code to `1.x.x`
 ### Preview status
 gitpod:summary
 
-## Release Notes
-```release-note
-NONE
-```
-
 ## Werft options:
 
 - [x] /werft with-preview
