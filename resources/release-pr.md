@@ -27,7 +27,7 @@ Update code to `1.x.x`
   - [ ] that a PR view is preloaded when opening a PR URL
   - [ ] test `gp open` and `gp preview`
   - [ ] test open in VS Code Desktop, check `gp open` and `gp preview` in task/user terminals
-  - [ ] telemetry data is collected in [Segment](https://app.segment.com/gitpod/sources/staging_trusted/debugger)
+  - [ ] telemetry data like `vscode_extension_gallery` is collected in [Segment](https://app.segment.com/gitpod/sources/staging_trusted/debugger)
 
 ### Preview status
 gitpod:summary
