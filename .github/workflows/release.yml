@@ -29,7 +29,7 @@ jobs:
   build-dependencies:
     runs-on: ubuntu-latest
     container:
-      image: ${{ matrix.image }} 
+      image: ${{ matrix.image }}
     strategy:
       fail-fast: true
       matrix:
@@ -40,7 +40,7 @@ jobs:
         # - vscode_arch: arm64
         #   npm_arch: arm64
         #   image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
-    
+
     name: Build native dependencies linux
     if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
     steps:
@@ -82,13 +82,13 @@ jobs:
         include:
         - vscode_arch: x64
           npm_arch: x64
-          image: gitpod/openvscode-server-linux-build-agent:bionic-x64
+          image: gitpod/openvscode-server-linux-build-agent:focal-x64
         - vscode_arch: arm64
           npm_arch: arm64
-          image: gitpod/openvscode-server-linux-build-agent:buster-arm64
+          image: gitpod/openvscode-server-linux-build-agent:bionic-arm64
         - vscode_arch: armhf
           npm_arch: armv7l
-          image: gitpod/openvscode-server-linux-build-agent:buster-armhf
+          image: gitpod/openvscode-server-linux-build-agent:bionic-armhf
 
     name: Build linux-${{ matrix.vscode_arch }}
     needs: build-dependencies
