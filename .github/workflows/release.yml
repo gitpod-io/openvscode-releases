@@ -87,7 +87,7 @@ jobs:
           npm_arch: arm64
           image: gitpod/openvscode-server-linux-build-agent:bionic-arm64
         - vscode_arch: armhf
-          npm_arch: armv7l
+          npm_arch: arm
           image: gitpod/openvscode-server-linux-build-agent:bionic-armhf
 
     name: Build linux-${{ matrix.vscode_arch }}
@@ -142,16 +142,7 @@ jobs:
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
         run: |
           set -e
-          if [ "${{ matrix.npm_arch }}" = "armv7l" ]; then
-            # There is no target_arch="armv7l" supported by node_gyp,
-            # arm versions for compilation are decided based on the CC
-            # macros.
-            # Mapping value is based on
-            # https://github.com/nodejs/node/blob/0903515e126c2697042d6546c6aa4b72e1a4b33e/configure.py#L49-L50
-            export npm_config_arch="arm"
-          else
-            export npm_config_arch=${{ matrix.npm_arch }}
-          fi
+          export npm_config_arch=${{ matrix.npm_arch }}
           yarn --frozen-lockfile --network-timeout 180000
 
       - name: Download server build dependencies
