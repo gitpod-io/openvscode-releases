@@ -82,7 +82,7 @@ jobs:
         include:
         - vscode_arch: x64
           npm_arch: x64
-          image: gitpod/openvscode-server-linux-build-agent:focal-x64
+          image: gitpod/openvscode-server-linux-build-agent:bionic-x64
         - vscode_arch: arm64
           npm_arch: arm64
           image: gitpod/openvscode-server-linux-build-agent:bionic-arm64
