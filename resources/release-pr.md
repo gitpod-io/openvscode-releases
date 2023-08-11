@@ -36,3 +36,4 @@ gitpod:summary
 
 - [x] /werft with-preview
 - [x] /werft analytics=segment
+- [x] /werft with-large-vm
