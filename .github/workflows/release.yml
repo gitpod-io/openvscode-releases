@@ -145,7 +145,7 @@ jobs:
           VSCODE_SKIP_NODE_VERSION_CHECK: 1
           npm_config_arch: ${{ matrix.npm_arch }}
           VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME: ${{ matrix.deps_container }}
-          VSCODE_HOST_MOUNT: /home/builduser/openvscode-server
+          VSCODE_HOST_MOUNT: ${{ github.workspace }}/openvscode-server
         run: |
           set -e
 
