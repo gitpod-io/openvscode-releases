@@ -27,46 +27,13 @@ env:
   ADD_TAGS: ${{ github.event.inputs.addTags || 'true' }}
 
 jobs:
-  build-dependencies:
-    runs-on: ubuntu-latest
-    container:
-      image: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
-    name: Build native dependencies linux-x64
-    if: github.event.inputs.commit || github.event.workflow_run.conclusion == 'success'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          repository: ${{ github.repository_owner }}/openvscode-server
-          ref: ${{ env.RELEASE_COMMIT }}
-          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-
-      - name: Execute yarn
-        run: |
-          set -e
-          export npm_config_arch=x64
-          yarn --cwd remote --frozen-lockfile --network-timeout 180000
-
-      - name: Compress node_modules output
-        run: |
-          set -e
-          tar -cz --ignore-failed-read -f reh_node_modules-x64.tar.gz -C ./remote node_modules
-
-      - name: Upload compiled dependencies
-        uses: actions/upload-artifact@v3
-        with:
-          name: reh_node_modules-x64
-          path: reh_node_modules-x64.tar.gz
-
   build:
     runs-on: ubuntu-latest
-    container:
-      image: gitpod/openvscode-server-linux-build-agent:bionic-x64
-      env:
-        OS_NAME: 'linux'
-        VSCODE_ARCH: 'x64'
-
     name: Build linux-x64
-    needs: build-dependencies
+    env:
+      OS_NAME: 'linux'
+      VSCODE_ARCH: 'x64'
+      NPM_REGISTRY: 'https://registry.yarnpkg.com'
     steps:
       - uses: actions/checkout@v3
       
@@ -124,23 +91,26 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+          VSCODE_SKIP_NODE_VERSION_CHECK: 1
+          npm_config_arch: x64
+          VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
+          VSCODE_HOST_MOUNT: ${{ github.workspace }}/openvscode-server
         run: |
           set -e
-          export npm_config_arch="x64"
-          yarn --frozen-lockfile --network-timeout 180000
 
-      - name: Download server build dependencies
-        uses: actions/download-artifact@v3
-        with:
-          name: reh_node_modules-x64
-          path: ./openvscode-server
+          yarn --cwd build --frozen-lockfile --check-files
 
-      - name: Extract server node_modules output
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          rm -rf remote/node_modules
-          tar -xzf reh_node_modules-x64.tar.gz --directory ./remote
+          docker run -e npm_config_arch -e NPM_REGISTRY \
+            -e VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME -e VSCODE_HOST_MOUNT \
+            -e ELECTRON_SKIP_BINARY_DOWNLOAD -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD \
+            -e VSCODE_SKIP_NODE_VERSION_CHECK \
+            -v $GITHUB_WORKSPACE/openvscode-server:/home/builduser/openvscode-server \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -u 1001:121 \
+            -w /home/builduser/openvscode-server gitpod/openvscode-server-linux-build-agent:bionic-$VSCODE_ARCH \
+            /bin/bash -c "./build/azure-pipelines/linux/install.sh"
+
+          sudo chown -R $USER:$USER $GITHUB_WORKSPACE/openvscode-server
 
       - name: Update product.json
         working-directory: ./openvscode-server
