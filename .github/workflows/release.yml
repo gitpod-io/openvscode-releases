@@ -86,7 +86,7 @@ jobs:
           deps_container: 
 
     name: Build linux-${{ matrix.vscode_arch }}
-    needs: build-dependencies
+    # needs: build-dependencies
     outputs:
       release_commit: ${{ steps.bundle_tar.outputs.release_commit }}
       version: ${{ steps.bundle_tar.outputs.version }}
