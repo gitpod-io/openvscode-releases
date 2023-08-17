@@ -157,6 +157,7 @@ jobs:
             -e VSCODE_SKIP_NODE_VERSION_CHECK \
             -v $GITHUB_WORKSPACE/openvscode-server:/home/builduser/openvscode-server \
             -v /var/run/docker.sock:/var/run/docker.sock \
+            -u 1001:121 \
             -w /home/builduser/openvscode-server gitpod/openvscode-server-linux-build-agent:bionic-$VSCODE_ARCH \
             /bin/bash -c "./build/azure-pipelines/linux/install.sh"
 
