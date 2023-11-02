@@ -48,6 +48,10 @@ jobs:
         with:
           node-version: 18
 
+      - name: prepare
+        run: |
+          npm install -g node-gyp
+
       - name: Sync with upstream (rebase)
         run: |
           ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} ${{ env.UPDATE_BRANCH }} "code web server initial commit" true
