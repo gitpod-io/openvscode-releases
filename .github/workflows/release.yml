@@ -72,7 +72,9 @@ jobs:
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
-        run: echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js ${{ matrix.vscode_arch }})" >> $GITHUB_OUTPUT
+        run: |
+          mkdir -p .build
+          echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js ${{ matrix.vscode_arch }})" >> $GITHUB_OUTPUT
       - name: Cache node modules
         id: cacheNodeModules
         uses: actions/cache@v3
