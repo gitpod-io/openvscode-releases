@@ -36,16 +36,12 @@ jobs:
         include:
         - vscode_arch: x64
           npm_arch: x64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
         - vscode_arch: arm64
           npm_arch: arm64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
         - vscode_arch: armhf
           npm_arch: arm
-          deps_container: 
 
     name: Build linux-${{ matrix.vscode_arch }}
-    # needs: build-dependencies
     outputs:
       release_commit: ${{ steps.bundle_tar.outputs.release_commit }}
       version: ${{ steps.bundle_tar.outputs.version }}
@@ -101,26 +97,20 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
-          VSCODE_SKIP_NODE_VERSION_CHECK: 1
           npm_config_arch: ${{ matrix.npm_arch }}
-          VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME: ${{ matrix.deps_container }}
-          VSCODE_HOST_MOUNT: ${{ github.workspace }}/openvscode-server
         run: |
           set -e
 
-          yarn --cwd build --frozen-lockfile --check-files
+          for i in {1..5}; do # try 5 times
+            yarn --cwd build --frozen-lockfile --check-files && break
+            if [ $i -eq 3 ]; then
+              echo "Yarn failed too many times" >&2
+              exit 1
+            fi
+            echo "Yarn failed $i, trying again..."
+          done
 
-          docker run -e npm_config_arch -e NPM_REGISTRY \
-            -e VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME -e VSCODE_HOST_MOUNT \
-            -e ELECTRON_SKIP_BINARY_DOWNLOAD -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD \
-            -e VSCODE_SKIP_NODE_VERSION_CHECK \
-            -v $GITHUB_WORKSPACE/openvscode-server:/home/builduser/openvscode-server \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -u 1001:121 \
-            -w /home/builduser/openvscode-server gitpod/openvscode-server-linux-build-agent:bionic-$VSCODE_ARCH \
-            /bin/bash -c "./build/azure-pipelines/linux/install.sh"
-
-          sudo chown -R $USER:$USER $GITHUB_WORKSPACE/openvscode-server
+          ./build/azure-pipelines/linux/install.sh
 
       - name: Update product.json
         working-directory: ./openvscode-server
