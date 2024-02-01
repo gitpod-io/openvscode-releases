@@ -1,0 +1,208 @@
+name: Release Gitpod Code Test
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Commit to release'
+        required: true
+      quality:
+        description: 'Quality'
+        required: true
+        type: choice
+        options:
+        - insider
+        - stable
+        default: insider
+      addTags:
+        description: 'Adds release tags (latest, nightly, etc) to the image'
+        type: boolean
+        required: true
+  # workflow_run:
+  #   workflows: ["Gitpod Code Rebase"]
+  #   types: [completed]
+
+env:
+  QUALITY: ${{ github.event.inputs.quality || 'insider' }}
+  RELEASE_COMMIT: ${{ github.event.inputs.commit || 'gp-code-test/main' }}
+  ADD_TAGS: ${{ github.event.inputs.addTags || 'true' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build linux-x64
+    env:
+      OS_NAME: 'linux'
+      VSCODE_ARCH: 'x64'
+      NPM_REGISTRY: 'https://registry.yarnpkg.com'
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/openvscode-server
+          ref: ${{ env.RELEASE_COMMIT }}
+          path: openvscode-server
+          token: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+
+      # - name: Auth Google Cloud SDK
+      #   uses: google-github-actions/auth@v0
+      #   with:
+      #     credentials_json: ${{ secrets.GCP_SA_KEY }}
+      # - name: Set up Google Cloud SDK
+      #   uses: google-github-actions/setup-gcloud@v0
+      #   with:
+      #     project_id: ${{ secrets.GCP_PROJECT_ID }}
+      # - name: Set up Docker
+      #   run: |
+      #     gcloud auth configure-docker --quiet
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Compute node modules cache key
+        working-directory: ./openvscode-server
+        id: nodeModulesCacheKey
+        run: |
+          mkdir -p .build
+          echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js x64)" >> $GITHUB_OUTPUT
+      - name: Cache node modules
+        id: cacheNodeModules
+        uses: actions/cache@v3
+        with:
+          path: "openvscode-server/**/node_modules"
+          key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
+      - name: Get yarn cache directory path
+        working-directory: ./openvscode-server
+        id: yarnCacheDirPath
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - name: Cache yarn directory
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-yarnCacheDir-
+      - name: Execute yarn
+        working-directory: ./openvscode-server
+        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+          npm_config_arch: x64
+        run: |
+          set -e
+
+          for i in {1..5}; do # try 5 times
+            yarn --cwd build --frozen-lockfile --check-files && break
+            if [ $i -eq 3 ]; then
+              echo "Yarn failed too many times" >&2
+              exit 1
+            fi
+            echo "Yarn failed $i, trying again..."
+          done
+
+          ./build/azure-pipelines/linux/install.sh
+
+      - name: Update product.json
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          nameShort=$(jq --raw-output '.nameShort' product.json)
+          nameLong=$(jq --raw-output '.nameLong' product.json)
+          if [ "$QUALITY" = "insider" ]; then
+            nameShort="$nameShort - Insiders"
+            nameLong="$nameLong - Insiders"
+          fi
+          setQuality="setpath([\"quality\"]; \"$QUALITY\")"
+          setNameShort="setpath([\"nameShort\"]; \"$nameShort\")"
+          setNameLong="setpath([\"nameLong\"]; \"$nameLong\")"
+          jqCommands="${setQuality} | ${setNameShort} | ${setNameLong}"
+          cat product.json | jq "${jqCommands}" > product.json.tmp
+          mv product.json.tmp product.json
+
+          jq '{quality,nameLong,nameShort}' product.json
+
+      - name: Prepare for distribution
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          yarn gulp compile-build
+          yarn gulp extensions-ci
+          yarn gulp minify-vscode-reh
+          yarn gulp vscode-web-min-ci
+          yarn gulp vscode-reh-linux-x64-min-ci
+
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gp-code-test-web
+          path: vscode-web
+
+      - name: Upload server artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gp-code-test-server
+          path: vscode-reh-linux-x64
+
+      # - name: Store release data
+      #   id: release_data
+      #   run: |
+      #     set -e
+      #     version=$(node -p -e "require('./openvscode-server/package.json').version")
+      #     release_commit=$(git -C openvscode-server rev-parse "${RELEASE_COMMIT}")
+
+      #     echo "release_commit=${release_commit}" >> $GITHUB_OUTPUT
+      #     echo "version=${version}" >> $GITHUB_OUTPUT
+      #     echo "quality=${QUALITY}" >> $GITHUB_OUTPUT
+
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v2
+
+      # - name: Docker meta
+      #   id: meta
+      #   uses: docker/metadata-action@v4
+      #   with:
+      #     images: |
+      #       eu.gcr.io/gitpod-core-dev/build/ide/code
+      #     tags: |
+      #       type=raw,value=commit-${{ steps.release_data.outputs.release_commit }}
+      #       type=raw,value=${{ steps.release_data.outputs.version }},enable=${{ steps.release_data.outputs.quality == 'stable' && env.ADD_TAGS == 'true'}}
+      #       type=raw,value=latest,enable=${{ steps.release_data.outputs.quality == 'stable' && env.ADD_TAGS == 'true' }}
+      #       type=raw,value=insiders,enable=${{ steps.release_data.outputs.quality != 'stable' && env.ADD_TAGS == 'true' }}
+      #       type=raw,value=nightly,enable=${{ steps.release_data.outputs.quality != 'stable' && env.ADD_TAGS == 'true' }}
+
+      # - name: Docker build and push
+      #   uses: docker/build-push-action@v3
+      #   with:
+      #     push: true
+      #     context: .
+      #     file: ./gitpodCode.Dockerfile
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: |
+      #       io.gitpod.ide.version=${{ steps.release_data.outputs.version }}
+      #       io.gitpod.ide.commit=${{ steps.release_data.outputs.release_commit }}
+
+      # - name: Output the image tag to the GitHub Summary
+      #   run: |
+      #     echo "Successfully built the \`Gitpod Code Test\` with the tag:" >> summary.md
+      #     echo "" >> summary.md
+      #     echo "\`\`\`" >> summary.md
+      #     echo "commit-${{ steps.release_data.outputs.release_commit }}" >> summary.md
+      #     echo "\`\`\`" >> summary.md
+      #     cat summary.md >> $GITHUB_STEP_SUMMARY
+
+      # - name: Get previous job's status
+      #   id: lastrun
+      #   uses: filiptronicek/get-last-job-status@main
+
+      # - name: Slack Notification
+      #   if: ${{ (success() && steps.lastrun.outputs.status == 'failed') || failure() }}
+      #   uses: rtCamp/action-slack-notify@v2
+      #   env:
+      #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      #     SLACK_COLOR: ${{ job.status }}
