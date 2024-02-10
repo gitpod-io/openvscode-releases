@@ -36,10 +36,13 @@ jobs:
         include:
         - vscode_arch: x64
           npm_arch: x64
+          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
         - vscode_arch: arm64
           npm_arch: arm64
+          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
         - vscode_arch: armhf
           npm_arch: arm
+          deps_container: gitpod/openvscode-server-linux-build-agent:bionic-arm
 
     name: Build linux-${{ matrix.vscode_arch }}
     outputs:
@@ -100,6 +103,8 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
           npm_config_arch: ${{ matrix.npm_arch }}
+          VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME: ${{ matrix.deps_container }}
+          VSCODE_HOST_MOUNT: ${{ github.workspace }}/openvscode-server
         run: |
           set -e
 
