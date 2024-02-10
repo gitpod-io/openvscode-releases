@@ -42,7 +42,7 @@ jobs:
           deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
         - vscode_arch: armhf
           npm_arch: arm
-          deps_container: gitpod/openvscode-server-linux-build-agent:bionic-armhf
+          deps_container: gitpod/openvscode-server-linux-build-agent:bionic-arm32v7
 
     name: Build linux-${{ matrix.vscode_arch }}
     outputs:
