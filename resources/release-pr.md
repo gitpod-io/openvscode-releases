@@ -5,6 +5,7 @@ Update code to `1.x.x`
 
 - [ ] Update Insiders  (https://github.com/gitpod-io/gitpod/blob/main/WORKSPACE.yaml)
 - [ ] Update Stable (https://github.com/gitpod-io/gitpod/blob/main/install/installer/pkg/components/workspace/ide/constants.go)
+- [ ] Update code versions array (https://github.com/gitpod-io/gitpod/blob/9e6419c3f49c2b47f6a5b848fd597675e2a0098d/install/installer/pkg/components/ide-service/ide_config_configmap.go#L113-L130)
 
 ## How to test
 
@@ -13,7 +14,7 @@ Update code to `1.x.x`
 - Test the following:
   - [ ] terminals are preserved and resized properly between window reloads
   - [ ] WebViews are working
-  - [ ] extension host process: check language smartness and debugging 
+  - [ ] extension host process: check language smartness and debugging
   - [ ] extension management (installing/uninstalling)
   - [ ] install the [VIM extension](https://open-vsx.org/extension/vscodevim/vim) to test web extensions
   - that user data is synced across workspaces as well as on workspace restarts, especially for extensions
