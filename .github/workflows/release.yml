@@ -73,6 +73,7 @@ jobs:
         run: npm install -g yarn
 
       - name: Setup system services
+        working-directory: ./openvscode-server
         run: |
           set -e
           # Start X server
