@@ -108,6 +108,9 @@ jobs:
         run: |
           set -e
 
+          # To workaround the issue of yarn not respecting the registry value from .npmrc
+          yarn config set registry "$NPM_REGISTRY"
+
           for i in {1..5}; do # try 5 times
             yarn --cwd build --frozen-lockfile --check-files && break
             if [ $i -eq 3 ]; then
@@ -117,7 +120,17 @@ jobs:
             echo "Yarn failed $i, trying again..."
           done
 
-          ./build/azure-pipelines/linux/install.sh
+          export VSCODE_SYSROOT_PREFIX='-glibc-2.17'
+          source ./build/azure-pipelines/linux/setup-env.sh --only-remote
+
+          for i in {1..5}; do # try 5 times
+            yarn --frozen-lockfile --check-files && break
+            if [ $i -eq 3 ]; then
+              echo "Yarn failed too many times" >&2
+              exit 1
+            fi
+            echo "Yarn failed $i, trying again..."
+          done
 
       - name: Update product.json
         working-directory: ./openvscode-server
