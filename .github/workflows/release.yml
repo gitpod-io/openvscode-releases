@@ -72,6 +72,28 @@ jobs:
       - name: Install Yarn
         run: npm install -g yarn
 
+      - name: Setup system services
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          # Start X server
+          sudo apt-get update
+          sudo apt-get install -y pkg-config \
+            dbus \
+            xvfb \
+            libgtk-3-0 \
+            libxkbfile-dev \
+            libkrb5-dev \
+            libgbm1 \
+            rpm
+          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
+          sudo chmod +x /etc/init.d/xvfb
+          sudo update-rc.d xvfb defaults
+          sudo service xvfb start
+          # Start dbus session
+          sudo mkdir -p /var/run/dbus
+          DBUS_LAUNCH_RESULT=$(sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address)
+
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
@@ -108,6 +130,9 @@ jobs:
         run: |
           set -e
 
+          # To workaround the issue of yarn not respecting the registry value from .npmrc
+          yarn config set registry "$NPM_REGISTRY"
+
           for i in {1..5}; do # try 5 times
             yarn --cwd build --frozen-lockfile --check-files && break
             if [ $i -eq 3 ]; then
@@ -117,7 +142,17 @@ jobs:
             echo "Yarn failed $i, trying again..."
           done
 
-          ./build/azure-pipelines/linux/install.sh
+          export VSCODE_SYSROOT_PREFIX='-glibc-2.17'
+          source ./build/azure-pipelines/linux/setup-env.sh --only-remote
+
+          for i in {1..5}; do # try 5 times
+            yarn --frozen-lockfile --check-files && break
+            if [ $i -eq 3 ]; then
+              echo "Yarn failed too many times" >&2
+              exit 1
+            fi
+            echo "Yarn failed $i, trying again..."
+          done
 
       - name: Update product.json
         working-directory: ./openvscode-server
