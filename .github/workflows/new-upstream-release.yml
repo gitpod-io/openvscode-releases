@@ -74,7 +74,10 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#FDD20A"
           SLACK_TITLE: New vscode release branch created
-          SLACK_MESSAGE: 'Start preparing for a new release :exclamation:'
+          SLACK_MESSAGE: |
+            Start preparing for a new release :exclamation:
+            
+            Trigger GHA https://github.com/gitpod-io/gitpod/actions/workflows/code-build.yaml after sync upstream
 
   notify-recovery-release:
     runs-on: ubuntu-latest
@@ -168,5 +171,8 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: "#FDD20A"
           SLACK_TITLE: New commits on latest release branch
-          SLACK_MESSAGE: 'Start preparing for a new recovery release :exclamation:'
+          SLACK_MESSAGE: |
+            Start preparing for a new recovery release :exclamation:
+
+            Trigger GHA https://github.com/gitpod-io/gitpod/actions/workflows/code-build.yaml after sync upstream
 
