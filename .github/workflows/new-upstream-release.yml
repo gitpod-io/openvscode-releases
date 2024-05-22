@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
       - run: npm init --yes
       - run: npm install semver
 
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 2
       - run: npm init --yes
       - run: npm install semver
 

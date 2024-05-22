@@ -85,6 +85,7 @@ jobs:
 
       - name: Compile
         run: |
+          DISABLE_V8_COMPILE_CACHE=1
           yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
 
       - name: Push changes

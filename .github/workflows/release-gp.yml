@@ -58,7 +58,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install Yarn
         run: npm install -g yarn
@@ -137,6 +137,7 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
+          DISABLE_V8_COMPILE_CACHE=1
           yarn gulp compile-build
           yarn gulp extensions-ci
           yarn gulp minify-vscode-reh
