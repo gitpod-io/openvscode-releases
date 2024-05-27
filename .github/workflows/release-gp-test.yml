@@ -136,7 +136,8 @@ jobs:
           yarn gulp minify-vscode-reh
           yarn gulp vscode-web-min-ci
           yarn gulp vscode-reh-linux-x64-min-ci
-        - DISABLE_V8_COMPILE_CACHE: 1
+        env:
+          - DISABLE_V8_COMPILE_CACHE: 1
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v3

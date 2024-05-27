@@ -211,7 +211,8 @@ jobs:
             compile-extension:git \
             compile-extension:ipynb \
             compile-extension-media
-        - DISABLE_V8_COMPILE_CACHE: 1
+        env:
+          - DISABLE_V8_COMPILE_CACHE: 1
 
       - name: Compile test suites
         if: matrix.vscode_arch == 'x64'
