@@ -143,7 +143,7 @@ jobs:
           yarn gulp vscode-web-min-ci
           yarn gulp vscode-reh-linux-x64-min-ci
         env:
-          - DISABLE_V8_COMPILE_CACHE: 1
+          DISABLE_V8_COMPILE_CACHE: 1
 
       - name: Custom Gitpod stuff
         run: |

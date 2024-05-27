@@ -189,7 +189,7 @@ jobs:
           VSCODE_DISTRO_COMMIT="${distro_commit}" \
           yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
         env:
-          - DISABLE_V8_COMPILE_CACHE: 1
+          DISABLE_V8_COMPILE_CACHE: 1
 
       - name: Download playwright
         if: matrix.vscode_arch == 'x64'
@@ -212,7 +212,7 @@ jobs:
             compile-extension:ipynb \
             compile-extension-media
         env:
-          - DISABLE_V8_COMPILE_CACHE: 1
+          DISABLE_V8_COMPILE_CACHE: 1
 
       - name: Compile test suites
         if: matrix.vscode_arch == 'x64'
