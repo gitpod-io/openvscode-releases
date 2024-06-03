@@ -35,9 +35,9 @@ jobs:
       VSCODE_ARCH: 'x64'
       NPM_REGISTRY: 'https://registry.yarnpkg.com'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/openvscode-server
           ref: ${{ env.RELEASE_COMMIT }}

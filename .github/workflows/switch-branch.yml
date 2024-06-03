@@ -24,11 +24,11 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: openvscode-releases
           token: ${{ secrets.GH_PAT }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: gitpod
           repository: gitpod-io/gitpod
