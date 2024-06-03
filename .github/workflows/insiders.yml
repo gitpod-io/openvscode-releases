@@ -137,3 +137,8 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
+          SLACK_MESSAGE: |
+            Exec command:
+            ```
+            ./scripts/sync-with-upstream.sh ${{ env.PARENT_COMMIT }} ${{ env.UPDATE_BRANCH }} "code web server initial commit" true
+            ```
