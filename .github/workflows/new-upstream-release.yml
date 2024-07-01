@@ -176,3 +176,71 @@ jobs:
 
             Trigger GHA https://github.com/gitpod-io/gitpod/actions/workflows/code-build.yaml after sync upstream
 
+  start-automatic-release-on-release:
+    name: Check and start automatic release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm init --yes
+      - run: npm install semver
+
+      - name: Check for new release branch
+        id: new-release
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          script: |
+            const semver = require('semver');
+
+            let microsoftRelease = undefined;
+            try {
+              const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+                owner: 'microsoft',
+                repo: 'vscode'
+              });
+
+              const releaseTag = latestRelease.tag_name;
+              microsoftRelease = releaseTag;
+              console.log(microsoftRelease);
+            } catch (e) {
+              console.error(e);
+              return false;
+            }
+
+            let gitpodRelease = undefined;
+            try {
+              const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+                owner: 'gitpod-io',
+                repo: 'openvscode-server',
+              });
+              const releaseTag = latestRelease.tag_name;
+              gitpodRelease = releaseTag.split('-v')[1];
+            } catch (e) {
+              console.log(e);
+            }
+
+            const releaseBranch = `release/${semver.major(microsoftRelease)}.${semver.minor(microsoftRelease)}`;
+
+            if (gitpodRelease && semver.eq(microsoftRelease, gitpodRelease)) {
+              return false;
+            }
+
+            const { data: branchData } = await github.rest.repos.getBranch({
+              owner: 'microsoft',
+              repo: 'vscode',
+              branch: releaseBranch
+            });
+
+            await github.rest.repos.createDispatchEvent({
+              owner: 'gitpod-io',
+              repo: 'openvscode-releases',
+              event_type: 'release',
+              client_payload: {
+                quality: 'stable',
+                commit: branchData.commit.sha,
+              },
+            });
+
+            return true;
