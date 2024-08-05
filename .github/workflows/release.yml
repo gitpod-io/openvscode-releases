@@ -17,13 +17,16 @@ on:
         description: 'Create GitHub and DockerHub Release'
         type: boolean
         required: true
+  repository_dispatch:
+    types: [release]
+    
   workflow_run:
     workflows: ["OpenVSCode Server Rebase"]
     types: [completed]
 
 env:
-  QUALITY: ${{ github.event.inputs.quality || 'insider' }}
-  RELEASE_COMMIT: ${{ github.event.inputs.commit || 'main' }}
+  QUALITY: ${{ github.event.inputs.quality || github.event.client_payload.quality || 'insider' }}
+  RELEASE_COMMIT: ${{ github.event.inputs.commit || github.event.client_payload.commit || 'main' }}
 
 jobs:
   build:
