@@ -15,8 +15,8 @@ on:
 
 env:
   # Default values will be used by cron job
-  PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/release/1.92' }}
-  UPDATE_BRANCH: ${{ github.event.inputs.update_branch || 'release/1.92' }}
+  PARENT_COMMIT: ${{ github.event.inputs.parent_commit || 'upstream/main' }}
+  UPDATE_BRANCH: ${{ github.event.inputs.update_branch || 'main' }}
 
 jobs:
   sync-main:
