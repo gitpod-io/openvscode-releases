@@ -65,27 +65,27 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
-      - name: Get yarn cache directory path
-        id: yarnCacheDirPath
+      - name: Get npm cache directory path
+        id: npmCacheDirPath
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Cache yarn directory
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - name: Cache npm directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-yarnCacheDir-
-      - name: Execute yarn
+          path: ${{ steps.npmCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-npmCacheDirPath-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-npmCacheDirPathCacheDir-
+      - name: Execute npm
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
-        run: yarn --frozen-lockfile --network-timeout 180000
+        run: npm ci
 
       - name: Compile
         run: |
-          yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
+          npx npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 

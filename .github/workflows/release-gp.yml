@@ -3,18 +3,18 @@ on:
   workflow_dispatch:
     inputs:
       commit:
-        description: 'Commit to release'
+        description: "Commit to release"
         required: true
       quality:
-        description: 'Quality'
+        description: "Quality"
         required: true
         type: choice
         options:
-        - insider
-        - stable
+          - insider
+          - stable
         default: insider
       addTags:
-        description: 'Adds release tags (latest, nightly, etc) to the image'
+        description: "Adds release tags (latest, nightly, etc) to the image"
         type: boolean
         required: true
   # workflow_run:
@@ -31,12 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Build linux-x64
     env:
-      OS_NAME: 'linux'
-      VSCODE_ARCH: 'x64'
-      NPM_REGISTRY: 'https://registry.yarnpkg.com'
+      OS_NAME: "linux"
+      VSCODE_ARCH: "x64"
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/openvscode-server
@@ -60,9 +59,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Yarn
-        run: npm install -g yarn
-
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
         id: nodeModulesCacheKey
@@ -73,19 +69,18 @@ jobs:
         with:
           path: "openvscode-server/**/node_modules"
           key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
-      - name: Get yarn cache directory path
-        working-directory: ./openvscode-server
-        id: yarnCacheDirPath
+      - name: Get npm cache directory path
+        id: npmCacheDirPath
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Cache yarn directory
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - name: Cache npm directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-yarnCacheDir-
-      - name: Execute yarn
+          path: ${{ steps.npmCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-npmCacheDirPath-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-npmCacheDirPathCacheDir-
+      - name: Execute npm
         working-directory: ./openvscode-server
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         env:
@@ -98,7 +93,7 @@ jobs:
         run: |
           set -e
 
-          yarn --cwd build --frozen-lockfile --check-files
+          npm ci --prefix build
 
           docker run -e npm_config_arch -e NPM_REGISTRY \
             -e VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME -e VSCODE_HOST_MOUNT \
@@ -137,11 +132,11 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          yarn gulp compile-build
-          yarn gulp extensions-ci
-          yarn gulp minify-vscode-reh
-          yarn gulp vscode-web-min-ci
-          yarn gulp vscode-reh-linux-x64-min-ci
+          npm run gulp compile-build
+          npm run gulp extensions-ci
+          npm run gulp minify-vscode-reh
+          npm run gulp vscode-web-min-ci
+          npm run gulp vscode-reh-linux-x64-min-ci
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
@@ -154,7 +149,7 @@ jobs:
           # Check pkg/blobserve/blobserve.go, `inlineVars` method
           cp vscode-web/out/vs/gitpod/browser/workbench/workbench.html vscode-web/index.html
           cp vscode-web/out/vs/gitpod/browser/workbench/callback.html vscode-web/callback.html
-          
+
           sed -i -e 's#baseUrl =.*;#baseUrl = window.location.origin;#g' vscode-web/index.html
           sed -i -e 's#{{WORKBENCH_WEB_BASE_URL}}#.#g' vscode-web/index.html
           sed -i -e "s/{{VERSION}}/$CODE_QUALITY-$CODE_COMMIT/g" vscode-web/index.html
@@ -204,7 +199,7 @@ jobs:
           labels: |
             io.gitpod.ide.version=${{ steps.release_data.outputs.version }}
             io.gitpod.ide.commit=${{ steps.release_data.outputs.release_commit }}
-      
+
       - name: Output the image tag to the GitHub Summary
         run: |
           echo "Successfully built the \`Gitpod Code\` with the tag:" >> summary.md

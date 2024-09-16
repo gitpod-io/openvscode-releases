@@ -3,18 +3,18 @@ on:
   workflow_dispatch:
     inputs:
       commit:
-        description: 'Commit to release'
+        description: "Commit to release"
         required: true
       quality:
-        description: 'Quality'
+        description: "Quality"
         required: true
         type: choice
         options:
-        - insider
-        - stable
+          - insider
+          - stable
         default: insider
       uploadRelease:
-        description: 'Create GitHub and DockerHub Release'
+        description: "Create GitHub and DockerHub Release"
         type: boolean
         required: true
   workflow_run:
@@ -34,14 +34,14 @@ jobs:
       fail-fast: true
       matrix:
         include:
-        - vscode_arch: x64
-          npm_arch: x64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
-        - vscode_arch: arm64
-          npm_arch: arm64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
-        - vscode_arch: armhf
-          npm_arch: arm
+          - vscode_arch: x64
+            npm_arch: x64
+            deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
+          - vscode_arch: arm64
+            npm_arch: arm64
+            deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
+          - vscode_arch: armhf
+            npm_arch: arm
 
     name: Build linux-${{ matrix.vscode_arch }}
     outputs:
@@ -49,9 +49,8 @@ jobs:
       version: ${{ steps.bundle_tar.outputs.version }}
       quality: ${{ steps.bundle_tar.outputs.quality }}
     env:
-      OS_NAME: 'linux'
+      OS_NAME: "linux"
       VSCODE_ARCH: ${{ matrix.vscode_arch }}
-      NPM_REGISTRY: 'https://registry.yarnpkg.com'
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -67,9 +66,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-
-      - name: Install Yarn
-        run: npm install -g yarn
 
       - name: Setup system services
         working-directory: ./openvscode-server
@@ -105,19 +101,18 @@ jobs:
         with:
           path: "openvscode-server/**/node_modules"
           key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
-      - name: Get yarn cache directory path
-        working-directory: ./openvscode-server
-        id: yarnCacheDirPath
+      - name: Get npm cache directory path
+        id: npmCacheDirPath
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Cache yarn directory
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - name: Cache npm directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-yarnCacheDir-
-      - name: Execute yarn
+          path: ${{ steps.npmCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-npmCacheDirPath-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-npmCacheDirPathCacheDir-
+      - name: Execute npm
         working-directory: ./openvscode-server
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         env:
@@ -129,28 +124,25 @@ jobs:
         run: |
           set -e
 
-          # To workaround the issue of yarn not respecting the registry value from .npmrc
-          yarn config set registry "$NPM_REGISTRY"
-
           for i in {1..5}; do # try 5 times
-            yarn --cwd build --frozen-lockfile --check-files && break
+            npm ci && break
             if [ $i -eq 3 ]; then
-              echo "Yarn failed too many times" >&2
+              echo "NPM failed too many times" >&2
               exit 1
             fi
-            echo "Yarn failed $i, trying again..."
+            echo "NPM failed $i, trying again..."
           done
 
           export VSCODE_SYSROOT_PREFIX='-glibc-2.17'
           source ./build/azure-pipelines/linux/setup-env.sh --only-remote
 
           for i in {1..5}; do # try 5 times
-            yarn --frozen-lockfile --check-files && break
+            npm ci && break
             if [ $i -eq 3 ]; then
-              echo "Yarn failed too many times" >&2
+              echo "NPM failed too many times" >&2
               exit 1
             fi
-            echo "Yarn failed $i, trying again..."
+            echo "NPM failed $i, trying again..."
           done
 
       - name: Update product.json
@@ -186,7 +178,7 @@ jobs:
           echo "distro_commit: ${distro_commit}"
 
           VSCODE_DISTRO_COMMIT="${distro_commit}" \
-          yarn gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
+          npm run gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
@@ -194,14 +186,14 @@ jobs:
         if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
         run: |
-          yarn playwright-install
+          npm run playwright-install
 
       - name: Build integration tests
         if: matrix.vscode_arch == 'x64'
         working-directory: ./openvscode-server
         run: |
           set -e
-          yarn gulp \
+          npm run gulp \
             compile-extension:configuration-editing \
             compile-extension:vscode-api-tests \
             compile-extension:markdown-language-features \
@@ -218,8 +210,8 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          yarn --cwd test/smoke compile
-          yarn --cwd test/integration/browser compile
+          npm run compile --prefix test/smoke
+          npm run compile --prefix test/integration/browser
 
       - name: Run integration tests
         if: matrix.vscode_arch == 'x64'
@@ -235,7 +227,7 @@ jobs:
         run: |
           set -e
           VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-          yarn smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage"
+          npm run smoketest-no-compile --web --headless --electronArgs="--disable-dev-shm-usage"
 
       - name: Bundle tarfile
         id: bundle_tar
