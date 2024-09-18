@@ -138,10 +138,11 @@ jobs:
             echo "Npm install failed $i, trying again..."
           done
 
+          cd ..
+
           export VSCODE_SYSROOT_PREFIX='-glibc-2.17'
           source ./build/azure-pipelines/linux/setup-env.sh --only-remote
 
-          cd ..
           for i in {1..5}; do # try 5 times
             npm ci && break
             if [ $i -eq 5 ]; then
