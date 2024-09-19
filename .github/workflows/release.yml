@@ -54,7 +54,7 @@ jobs:
       NPM_REGISTRY: 'https://registry.npmjs.org'
     steps:
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - uses: actions/checkout@v4
         with:
@@ -260,7 +260,7 @@ jobs:
           echo "quality=${QUALITY}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.vscode_arch }}
           path: openvscode-server-*.tar.gz

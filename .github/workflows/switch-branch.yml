@@ -32,7 +32,7 @@ jobs:
         with:
           path: gitpod
           repository: gitpod-io/gitpod
-      
+
       - uses: actions/setup-node@v3
         with:
           node-version: 20
@@ -40,7 +40,7 @@ jobs:
       - run: npm install semver
 
       - name: Run the branch switch-a-roo
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const { inc, major, minor } =  require('semver');
