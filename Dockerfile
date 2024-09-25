@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /home/
 
 ARG RELEASE_TAG
+ARG RELEASE_TYPE="stable" # Supports stable or insiders
 ARG RELEASE_ORG="gitpod-io"
 ARG OPENVSCODE_SERVER_ROOT="/home/.openvscode-server"
 
@@ -26,11 +27,16 @@ RUN if [ -z "${RELEASE_TAG}" ]; then \
     elif [ "${arch}" = "armv7l" ]; then \
         arch="armhf"; \
     fi && \
-    wget https://github.com/${RELEASE_ORG}/openvscode-server/releases/download/${RELEASE_TAG}/${RELEASE_TAG}-linux-${arch}.tar.gz && \
-    tar -xzf ${RELEASE_TAG}-linux-${arch}.tar.gz && \
-    mv -f ${RELEASE_TAG}-linux-${arch} ${OPENVSCODE_SERVER_ROOT} && \
+    if [ "${RELEASE_TYPE}" = "insiders" ]; then \
+        RELEASE_TYPE_SUFFIX="insiders-"; \
+    else \
+        RELEASE_TYPE_SUFFIX=""; \
+    fi && \
+    wget https://github.com/${RELEASE_ORG}/openvscode-server/releases/download/openvscode-server-${RELEASE_TYPE_SUFFIX}${RELEASE_TAG}/openvscode-server-${RELEASE_TYPE_SUFFIX}${RELEASE_TAG}-linux-${arch}.tar.gz && \
+    tar -xzf openvscode-server-${RELEASE_TYPE_SUFFIX}${RELEASE_TAG}-linux-${arch}.tar.gz && \
+    mv -f openvscode-server-${RELEASE_TYPE_SUFFIX}${RELEASE_TAG}-linux-${arch} ${OPENVSCODE_SERVER_ROOT} && \
     cp ${OPENVSCODE_SERVER_ROOT}/bin/remote-cli/openvscode-server ${OPENVSCODE_SERVER_ROOT}/bin/remote-cli/code && \
-    rm -f ${RELEASE_TAG}-linux-${arch}.tar.gz
+    rm -f openvscode-server-${RELEASE_TYPE_SUFFIX}${RELEASE_TAG}-linux-${arch}.tar.gz
 
 ARG USERNAME=openvscode-server
 ARG USER_UID=1000
