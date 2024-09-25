@@ -44,13 +44,9 @@ jobs:
           sudo update-rc.d xvfb defaults
           sudo service xvfb start
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: prepare
-        run: |
-          npm install -g node-gyp
+          node-version-file: .nvmrc
 
       - name: Sync with upstream (rebase)
         run: |
@@ -61,33 +57,31 @@ jobs:
         run: echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js)" >> $GITHUB_OUTPUT
       - name: Cache node modules
         id: cacheNodeModules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
-      - name: Get yarn cache directory path
-        id: yarnCacheDirPath
+      - name: Get npm cache directory path
+        id: npmCacheDirPath
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Cache yarn directory
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+      - name: Cache npm directory
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: ${{ steps.yarnCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-yarnCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-yarnCacheDir-
-      - name: Execute yarn
+          path: ${{ steps.npmCacheDirPath.outputs.dir }}
+          key: ${{ runner.os }}-npmCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
+          restore-keys: ${{ runner.os }}-npmCacheDir-
+      - name: Execute npm
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
-        run: yarn --frozen-lockfile --network-timeout 180000
+        run: npm ci
 
       - name: Compile
         run: |
-          yarn npm-run-all --max_old_space_size=4095 -lp compile playwright-install download-builtin-extensions
-        env:
-          DISABLE_V8_COMPILE_CACHE: 1
+          npm exec -- npm-run-all -lp compile playwright-install download-builtin-extensions
 
       - name: Push changes
         run: |
@@ -99,7 +93,7 @@ jobs:
           echo "$(git rev-parse ${{ env.PARENT_COMMIT }})" > __upstream_commit.txt
       - name: Upload parent commit file
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: upstream_commit
           path: __upstream_commit.txt
