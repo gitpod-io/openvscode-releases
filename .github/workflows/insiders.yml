@@ -115,14 +115,14 @@ jobs:
           echo "$(git rev-parse ${{ env.PARENT_COMMIT }})" > __upstream_commit.txt
       - name: Upload parent commit file
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: upstream_commit
           path: __upstream_commit.txt
 
       - name: Upload logs files
         if: ${{ failure() && (steps.runSmokeTests.outcome == 'failure' || steps.runIntegrationTests.outcome == 'failure') }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs-linux-x64
           path: .build/logs
