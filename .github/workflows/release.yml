@@ -114,6 +114,30 @@ jobs:
           path: ${{ steps.npmCacheDirPath.outputs.dir }}
           key: ${{ runner.os }}-npmCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
           restore-keys: ${{ runner.os }}-npmCacheDir-
+     
+      - name: Override gnu target for arm64 and arm
+        working-directory: ./openvscode-server
+        if: matrix.vscode_arch == 'arm64' || matrix.vscode_arch == 'armhf'
+        run: |
+          set -e
+          includes=$(cat << 'EOF'
+          {
+            "target_defaults": {
+              "conditions": [
+                ["OS=='linux'", {
+                  'cflags_cc!': [ '-std=gnu++20' ],
+                  'cflags_cc': [ '-std=gnu++2a' ],
+                }]
+              ]
+            }
+          }
+          EOF
+          )
+          if [ ! -d "$HOME/.gyp" ]; then
+            mkdir -p "$HOME/.gyp"
+          fi
+          echo "$includes" > "$HOME/.gyp/include.gypi"
+
       - name: Execute npm
         working-directory: ./openvscode-server
         if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
@@ -141,7 +165,7 @@ jobs:
           cd ..
 
           export VSCODE_SYSROOT_PREFIX='-glibc-2.17'
-          source ./build/azure-pipelines/linux/setup-env.sh --only-remote
+          source ./build/azure-pipelines/linux/setup-env.sh --skip-sysroot
 
           for i in {1..5}; do # try 5 times
             npm ci && break
