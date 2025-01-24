@@ -80,10 +80,10 @@ jobs:
             rpm \
             gcc-10 \
             g++-10
-          # sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
-          # sudo chmod +x /etc/init.d/xvfb
-          # sudo update-rc.d xvfb defaults
-          # sudo service xvfb start
+          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
+          sudo chmod +x /etc/init.d/xvfb
+          sudo update-rc.d xvfb defaults
+          sudo service xvfb start
           # # Start dbus session
           # sudo mkdir -p /var/run/dbus
           # DBUS_LAUNCH_RESULT=$(sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address)
