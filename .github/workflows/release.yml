@@ -37,17 +37,13 @@ jobs:
         - vscode_arch: x64
           npm_arch: x64
           deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
-        - vscode_arch: arm64
-          npm_arch: arm64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
-        - vscode_arch: armhf
-          npm_arch: arm
+        # - vscode_arch: arm64
+        #   npm_arch: arm64
+        #   deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
+        # - vscode_arch: armhf
+        #   npm_arch: arm
 
     name: Build linux-${{ matrix.vscode_arch }}
-    outputs:
-      release_commit: ${{ steps.bundle_tar.outputs.release_commit }}
-      version: ${{ steps.bundle_tar.outputs.version }}
-      quality: ${{ steps.bundle_tar.outputs.quality }}
     env:
       OS_NAME: 'linux'
       VSCODE_ARCH: ${{ matrix.vscode_arch }}
@@ -90,236 +86,34 @@ jobs:
           sudo mkdir -p /var/run/dbus
           DBUS_LAUNCH_RESULT=$(sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address)
 
-      - name: Compute node modules cache key
-        working-directory: ./openvscode-server
-        id: nodeModulesCacheKey
-        run: |
-          mkdir -p .build
-          echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js linux ${{ matrix.vscode_arch }})" >> $GITHUB_OUTPUT
-      - name: Cache node modules
-        id: cacheNodeModules
-        uses: actions/cache@v4
-        with:
-          path: "openvscode-server/**/node_modules"
-          key: ${{ runner.os }}-cacheNodeModulesLinux-${{ steps.nodeModulesCacheKey.outputs.value }}
-      - name: Get npm cache directory path
-        working-directory: ./openvscode-server
-        id: npmCacheDirPath
-        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
-      - name: Cache npm directory
-        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.npmCacheDirPath.outputs.dir }}
-          key: ${{ runner.os }}-npmCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
-          restore-keys: ${{ runner.os }}-npmCacheDir-
-     
-      - name: Override gnu target for arm64 and arm
-        working-directory: ./openvscode-server
-        if: matrix.vscode_arch == 'arm64' || matrix.vscode_arch == 'armhf'
-        run: |
-          set -e
-          includes=$(cat << 'EOF'
-          {
-            "target_defaults": {
-              "conditions": [
-                ["OS=='linux'", {
-                  'cflags_cc!': [ '-std=gnu++20' ],
-                  'cflags_cc': [ '-std=gnu++2a' ],
-                }]
-              ]
-            }
-          }
-          EOF
-          )
-          if [ ! -d "$HOME/.gyp" ]; then
-            mkdir -p "$HOME/.gyp"
-          fi
-          echo "$includes" > "$HOME/.gyp/include.gypi"
-
-      - name: Execute npm
-        working-directory: ./openvscode-server
-        if: ${{ steps.cacheNodeModules.outputs.cache-hit != 'true' }}
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
-          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
-          npm_config_arch: ${{ matrix.npm_arch }}
-          VSCODE_REMOTE_DEPENDENCIES_CONTAINER_NAME: ${{ matrix.deps_container }}
-          VSCODE_HOST_MOUNT: ${{ github.workspace }}/openvscode-server
-        run: |
-          set -e
-
-          npm config set registry "$NPM_REGISTRY"
-
-          cd ./build
-          for i in {1..5}; do # try 5 times
-            npm ci && break
-            if [ $i -eq 5 ]; then
-              echo "Npm install failed too many times" >&2
-              exit 1
-            fi
-            echo "Npm install failed $i, trying again..."
-          done
-
-          cd ..
-
-          export VSCODE_SYSROOT_PREFIX='-glibc-2.17'
-          source ./build/azure-pipelines/linux/setup-env.sh --skip-sysroot
-
-          for i in {1..5}; do # try 5 times
-            npm ci && break
-            if [ $i -eq 5 ]; then
-              echo "Npm install failed too many times" >&2
-              exit 1
-            fi
-            echo "Npm install failed $i, trying again..."
-          done
-
-      - name: Update product.json
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          nameShort=$(jq --raw-output '.nameShort' product.json)
-          nameLong=$(jq --raw-output '.nameLong' product.json)
-          if [ "$QUALITY" = "insider" ]; then
-            nameShort="$nameShort - Insiders"
-            nameLong="$nameLong - Insiders"
-          fi
-          setQuality="setpath([\"quality\"]; \"$QUALITY\")"
-          setNameShort="setpath([\"nameShort\"]; \"$nameShort\")"
-          setNameLong="setpath([\"nameLong\"]; \"$nameLong\")"
-          jqCommands="${setQuality} | ${setNameShort} | ${setNameLong}"
-          cat product.json | jq "${jqCommands}" > product.json.tmp
-          mv product.json.tmp product.json
-
-          jq '{quality,nameLong,nameShort}' product.json
-
-      - name: Prepare for distribution
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          base_commit_msg="code web server initial commit"
-          base_commit=$(git log --pretty="%H" --max-count=1 --grep "${base_commit_msg}")
-          if [ -z "$base_commit" ]; then
-            echo "Could not find base commit"
-            exit 1
-          fi
-          distro_commit=$(git rev-parse "${base_commit}"~)
-          echo "distro_commit: ${distro_commit}"
-
-          VSCODE_DISTRO_COMMIT="${distro_commit}" \
-          npm run gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
-        env:
-          DISABLE_V8_COMPILE_CACHE: 1
-
-      - name: Download playwright
-        if: matrix.vscode_arch == 'x64'
-        working-directory: ./openvscode-server
-        run: |
-          npm run playwright-install
-
-      - name: Build integration tests
-        if: matrix.vscode_arch == 'x64'
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          npm run gulp \
-            compile-extension:configuration-editing \
-            compile-extension:css-language-features-server \
-            compile-extension:emmet \
-            compile-extension:git \
-            compile-extension:github-authentication \
-            compile-extension:html-language-features-server \
-            compile-extension:ipynb \
-            compile-extension:notebook-renderers \
-            compile-extension:json-language-features-server \
-            compile-extension:markdown-language-features \
-            compile-extension-media \
-            compile-extension:microsoft-authentication \
-            compile-extension:typescript-language-features \
-            compile-extension:vscode-api-tests \
-            compile-extension:vscode-colorize-tests \
-            compile-extension:vscode-test-resolver
-
-      - name: Compile Integration Tests
-        if: matrix.vscode_arch == 'x64'
-        working-directory: ./openvscode-server/test/integration/browser
-        run: npm run compile
-
-      - name: Compile Smoke Tests
-        if: matrix.vscode_arch == 'x64'
-        working-directory: ./openvscode-server/test/smoke
-        run: npm run compile
-
-      - name: Run integration tests
-        if: matrix.vscode_arch == 'x64'
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-          ./scripts/test-web-integration.sh --browser chromium
-
-      - name: Run smoke tests
-        if: matrix.vscode_arch == 'x64'
-        working-directory: ./openvscode-server
-        run: |
-          set -e
-          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-          npm run smoketest-no-compile -- --web --tracing --headless --electronArgs="--disable-dev-shm-usage"
-
-      - name: Bundle tarfile
-        id: bundle_tar
-        run: |
-          set -e
-          version=$(node -p -e "require('./openvscode-server/package.json').version")
-          release_commit=$(git -C openvscode-server rev-parse "${RELEASE_COMMIT}")
-          quality_name=$([ "$QUALITY" = "insider" ] && echo "-insiders" || echo "")
-          name="openvscode-server${quality_name}-v${version}-linux-${{ matrix.vscode_arch }}"
-          mv vscode-reh-web-linux-${{ matrix.vscode_arch }} ${name}
-          tar -czf ${name}.tar.gz ${name}
-
-          echo "release_commit=${release_commit}" >> $GITHUB_OUTPUT
-          echo "version=${version}" >> $GITHUB_OUTPUT
-          echo "quality=${QUALITY}" >> $GITHUB_OUTPUT
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-${{ matrix.vscode_arch }}
-          path: openvscode-server-*.tar.gz
-
-      - name: Get previous job's status
-        id: lastrun
-        uses: filiptronicek/get-last-job-status@main
-
       - name: Slack Notification
-        if: ${{ (success() && steps.lastrun.outputs.status == 'failed') || failure() }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
+          SLACK_MESSAGE: 'test'
+          SLACK_TITLE: Post test
 
-  github-release:
-    needs: build
-    if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
-    uses: ./.github/workflows/github-release.yml
-    with:
-      release_commit: ${{ needs.build.outputs.release_commit }}
-      version: ${{ needs.build.outputs.version }}
-      stable: ${{ needs.build.outputs.quality == 'stable' }}
-    secrets:
-      VSCODE_GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  # github-release:
+  #   needs: build
+  #   if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
+  #   uses: ./.github/workflows/github-release.yml
+  #   with:
+  #     release_commit: ${{ needs.build.outputs.release_commit }}
+  #     version: ${{ needs.build.outputs.version }}
+  #     stable: ${{ needs.build.outputs.quality == 'stable' }}
+  #   secrets:
+  #     VSCODE_GITHUB_TOKEN: ${{ secrets.VSCODE_GITHUB_TOKEN }}
+  #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
-  docker-release:
-    needs: [github-release, build]
-    if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
-    uses: ./.github/workflows/docker-release.yml
-    with:
-      version: ${{ needs.build.outputs.version }}
-      stable: ${{ needs.build.outputs.quality == 'stable' }}
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+  # docker-release:
+  #   needs: [github-release, build]
+  #   if: github.event.inputs.uploadRelease == 'true' || github.event.workflow_run.conclusion == 'success'
+  #   uses: ./.github/workflows/docker-release.yml
+  #   with:
+  #     version: ${{ needs.build.outputs.version }}
+  #     stable: ${{ needs.build.outputs.quality == 'stable' }}
+  #   secrets:
+  #     DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  #     DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
