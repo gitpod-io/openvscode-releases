@@ -49,8 +49,8 @@ jobs:
       VSCODE_ARCH: ${{ matrix.vscode_arch }}
       NPM_REGISTRY: 'https://registry.npmjs.org'
     steps:
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - uses: actions/checkout@v4
         with:
