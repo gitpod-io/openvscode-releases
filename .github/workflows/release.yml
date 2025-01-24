@@ -64,27 +64,29 @@ jobs:
         with:
           node-version-file: ./openvscode-server/.nvmrc
 
-      # - name: Setup system services
-      #   working-directory: ./openvscode-server
-      #   run: |
-      #     set -e
-      #     # Start X server
-      #     ./build/azure-pipelines/linux/apt-retry.sh sudo apt-get update
-      #     ./build/azure-pipelines/linux/apt-retry.sh sudo apt-get install -y pkg-config \
-      #       dbus \
-      #       xvfb \
-      #       libgtk-3-0 \
-      #       libxkbfile-dev \
-      #       libkrb5-dev \
-      #       libgbm1 \
-      #       rpm
-      #     sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
-      #     sudo chmod +x /etc/init.d/xvfb
-      #     sudo update-rc.d xvfb defaults
-      #     sudo service xvfb start
-      #     # Start dbus session
-      #     sudo mkdir -p /var/run/dbus
-      #     DBUS_LAUNCH_RESULT=$(sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address)
+      - name: Setup system services
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          # Start X server
+          ./build/azure-pipelines/linux/apt-retry.sh sudo apt-get update
+          ./build/azure-pipelines/linux/apt-retry.sh sudo apt-get install -y pkg-config \
+            dbus \
+            xvfb \
+            libgtk-3-0 \
+            libxkbfile-dev \
+            libkrb5-dev \
+            libgbm1 \
+            rpm \
+            gcc-10 \
+            g++-10
+          sudo cp build/azure-pipelines/linux/xvfb.init /etc/init.d/xvfb
+          sudo chmod +x /etc/init.d/xvfb
+          sudo update-rc.d xvfb defaults
+          sudo service xvfb start
+          # Start dbus session
+          sudo mkdir -p /var/run/dbus
+          DBUS_LAUNCH_RESULT=$(sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address)
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
