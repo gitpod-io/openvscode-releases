@@ -86,9 +86,6 @@ jobs:
           sudo chmod +x /etc/init.d/xvfb
           sudo update-rc.d xvfb defaults
           sudo service xvfb start
-          # Start dbus session
-          sudo mkdir -p /var/run/dbus
-          DBUS_LAUNCH_RESULT=$(sudo dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address)
 
       - name: Compute node modules cache key
         working-directory: ./openvscode-server
@@ -114,7 +111,7 @@ jobs:
           path: ${{ steps.npmCacheDirPath.outputs.dir }}
           key: ${{ runner.os }}-npmCacheDir-${{ steps.nodeModulesCacheKey.outputs.value }}
           restore-keys: ${{ runner.os }}-npmCacheDir-
-     
+
       - name: Override gnu target for arm64 and arm
         working-directory: ./openvscode-server
         if: matrix.vscode_arch == 'arm64' || matrix.vscode_arch == 'armhf'
