@@ -254,13 +254,13 @@ jobs:
           VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
           ./scripts/test-web-integration.sh --browser chromium
 
-      # - name: Run smoke tests
-      #   if: matrix.vscode_arch == 'x64'
-      #   working-directory: ./openvscode-server
-      #   run: |
-      #     set -e
-      #     VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
-      #     npm run smoketest-no-compile -- --web --tracing --headless --electronArgs="--disable-dev-shm-usage"
+      - name: Run smoke tests
+        if: matrix.vscode_arch == 'x64'
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          VSCODE_REMOTE_SERVER_PATH="$GITHUB_WORKSPACE/vscode-reh-web-linux-${{ matrix.vscode_arch }}" \
+          npm run smoketest-no-compile -- --web --tracing --headless --electronArgs="--disable-dev-shm-usage"
 
       - name: Bundle tarfile
         id: bundle_tar
