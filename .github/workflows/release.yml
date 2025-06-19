@@ -187,6 +187,12 @@ jobs:
 
           jq '{quality,nameLong,nameShort}' product.json
 
+      - name: Compile
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          npm exec -- npm-run-all -lp compile playwright-install download-builtin-extensions
+
       - name: Prepare for distribution
         working-directory: ./openvscode-server
         run: |
