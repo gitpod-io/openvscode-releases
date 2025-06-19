@@ -36,10 +36,8 @@ jobs:
         include:
         - vscode_arch: x64
           npm_arch: x64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
         - vscode_arch: arm64
           npm_arch: arm64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
         - vscode_arch: armhf
           npm_arch: arm
 
@@ -203,7 +201,7 @@ jobs:
           echo "distro_commit: ${distro_commit}"
 
           VSCODE_DISTRO_COMMIT="${distro_commit}" \
-          npm run gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
+          npm run gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min-ci
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
