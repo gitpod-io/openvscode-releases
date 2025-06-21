@@ -36,10 +36,8 @@ jobs:
         include:
         - vscode_arch: x64
           npm_arch: x64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-x64
         - vscode_arch: arm64
           npm_arch: arm64
-          deps_container: gitpod/openvscode-server-linux-build-agent:centos7-devtoolset8-arm64
         - vscode_arch: armhf
           npm_arch: arm
 
@@ -55,6 +53,13 @@ jobs:
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+
+      - name: Set up swap
+        uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
+        with:
+          swap-space-path: /swapfile
+          swap-size-gb: 16
+          remove-existing-swap-files: true
 
       - uses: actions/checkout@v4
         with:
