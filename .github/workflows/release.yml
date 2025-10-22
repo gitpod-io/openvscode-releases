@@ -190,8 +190,8 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          npm run core-ci
-          npm run extensions-ci
+          npm run gulp core-ci
+          npm run gulp extensions-ci
           npm exec -- npm-run-all -lp hygiene eslint define-class-fields-check vscode-dts-compile-check tsec-compile-check
         env:
           DISABLE_V8_COMPILE_CACHE: 1
@@ -201,7 +201,7 @@ jobs:
         run: |
           set -e
           npm run gulp minify-vscode-reh
-          npm run gulp "vscode-reh-linux-${{ matrix.vscode_arch }}-min-ci"
+          npm run gulp vscode-reh-linux-${{ matrix.vscode_arch }}-min-ci
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
