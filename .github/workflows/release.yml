@@ -184,8 +184,22 @@ jobs:
           distro_commit=$(git rev-parse "${base_commit}"~)
           echo "distro_commit: ${distro_commit}"
 
-          VSCODE_DISTRO_COMMIT="${distro_commit}" \
-          npm run gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min
+          echo "BUILD_SOURCEVERSION=${distro_commit}" >> $GITHUB_ENV
+
+      - name: coompile vscode linux
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          npm run gulp vscode-linux-${{ matrix.vscode_arch }}-min-ci
+        env:
+          DISABLE_V8_COMPILE_CACHE: 1
+
+      - name: build vscode linux reh
+        working-directory: ./openvscode-server
+        run: |
+          set -e
+          npm run gulp minify-vscode-reh
+          npm run gulp "vscode-reh-linux-${{ matrix.vscode_arch }}-min-ci"
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
