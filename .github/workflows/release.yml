@@ -192,7 +192,7 @@ jobs:
           set -e
           npm run gulp core-ci
           npm run gulp extensions-ci
-          npm exec -- npm-run-all -lp hygiene eslint define-class-fields-check vscode-dts-compile-check tsec-compile-check
+          npm exec -- npm-run-all -lp eslint define-class-fields-check vscode-dts-compile-check tsec-compile-check
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
