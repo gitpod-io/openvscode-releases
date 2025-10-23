@@ -199,8 +199,8 @@ jobs:
         working-directory: ./openvscode-server
         run: |
           set -e
-          npm run gulp minify-vscode-reh
-          npm run gulp vscode-reh-linux-${{ matrix.vscode_arch }}-min-ci
+          npm run gulp minify-vscode-reh-web
+          npm run gulp vscode-reh-web-linux-${{ matrix.vscode_arch }}-min-ci
         env:
           DISABLE_V8_COMPILE_CACHE: 1
 
