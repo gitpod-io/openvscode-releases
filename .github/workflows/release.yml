@@ -97,7 +97,7 @@ jobs:
         id: nodeModulesCacheKey
         run: |
           mkdir -p .build
-          echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.js linux ${{ matrix.vscode_arch }})" >> $GITHUB_OUTPUT
+          echo "value=$(node build/azure-pipelines/common/computeNodeModulesCacheKey.ts linux ${{ matrix.vscode_arch }})" >> $GITHUB_OUTPUT
       - name: Cache node modules
         id: cacheNodeModules
         uses: actions/cache@v4
@@ -142,6 +142,10 @@ jobs:
           cd ..
 
           source ./build/azure-pipelines/linux/setup-env.sh
+
+          # Run preinstall script before root dependencies are installed
+          # so that v8 headers are patched correctly for native modules.
+          node build/npm/preinstall.ts
 
           for i in {1..5}; do # try 5 times
             npm ci && break
