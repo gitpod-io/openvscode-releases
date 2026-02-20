@@ -27,7 +27,10 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on:
+      - runs-on
+      - runner=32cpu-linux-x64
+      - disk=large
 
     # support only linux for now
     strategy:
